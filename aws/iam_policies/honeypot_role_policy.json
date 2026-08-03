@@ -1,0 +1,36 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCloudWatchLogsDelivery",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": "arn:aws:logs:*:*:log-group:/aws/honeypot/*"
+    },
+    {
+      "Sid": "AllowSQSTelemetryStream",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage",
+        "sqs:SendMessageBatch"
+      ],
+      "Resource": "arn:aws:sqs:*:*:threat-intel-telemetry-queue"
+    },
+    {
+      "Sid": "DenyAllEC2AdminActions",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:Create*",
+        "ec2:Delete*",
+        "ec2:Authorize*",
+        "iam:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

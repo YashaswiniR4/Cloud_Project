@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  threat-intel-platform:
+    build: .
+    container_name: threat_intel_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=production
+      - LOG_LEVEL=INFO
+    restart: always

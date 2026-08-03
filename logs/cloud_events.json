@@ -1,0 +1,152 @@
+[
+    {
+        "event_id": "evt-1785745549717-401",
+        "timestamp": "2026-08-03T08:25:49.717145+00:00",
+        "source_ip": "10.0.0.42",
+        "event_source": "honeypot.ssh",
+        "event_name": "FailedPasswordAttempt",
+        "user_identity": "root",
+        "details": "Brute force attack detected on SSH honeypot (Port 2222)",
+        "base_severity": "HIGH"
+    },
+    {
+        "event_id": "evt-1785745549717-168",
+        "timestamp": "2026-08-03T08:25:49.717242+00:00",
+        "source_ip": "45.33.32.156",
+        "event_source": "honeypot.ssh",
+        "event_name": "FailedPasswordAttempt",
+        "user_identity": "root",
+        "details": "Brute force attack detected on SSH honeypot (Port 2222)",
+        "base_severity": "HIGH"
+    },
+    {
+        "event_id": "evt-1785745549717-634",
+        "timestamp": "2026-08-03T08:25:49.717257+00:00",
+        "source_ip": "192.168.1.105",
+        "event_source": "aws.ec2",
+        "event_name": "AuthorizeSecurityGroupIngress",
+        "user_identity": "arn:aws:iam::123456789012:user/admin",
+        "details": "Opened Port 22 (SSH) to 0.0.0.0/0 (Global Access)",
+        "base_severity": "HIGH"
+    },
+    {
+        "event_id": "evt-1785745549717-364",
+        "timestamp": "2026-08-03T08:25:49.717265+00:00",
+        "source_ip": "192.168.1.105",
+        "event_source": "aws.iam",
+        "event_name": "AttachUserPolicy",
+        "user_identity": "arn:aws:iam::123456789012:user/contractor",
+        "details": "Attached AdministratorAccess policy to low-privilege user",
+        "base_severity": "CRITICAL"
+    },
+    {
+        "event_id": "evt-1785745549717-499",
+        "timestamp": "2026-08-03T08:25:49.717272+00:00",
+        "source_ip": "10.0.0.42",
+        "event_source": "aws.ec2",
+        "event_name": "AuthorizeSecurityGroupIngress",
+        "user_identity": "arn:aws:iam::123456789012:user/admin",
+        "details": "Opened Port 22 (SSH) to 0.0.0.0/0 (Global Access)",
+        "base_severity": "HIGH"
+    },
+    {
+        "event_id": "evt-1785745549717-288",
+        "timestamp": "2026-08-03T08:25:49.717279+00:00",
+        "source_ip": "185.220.101.5",
+        "event_source": "honeypot.ssh",
+        "event_name": "FailedPasswordAttempt",
+        "user_identity": "root",
+        "details": "Brute force attack detected on SSH honeypot (Port 2222)",
+        "base_severity": "HIGH"
+    },
+    {
+        "event_id": "evt-1785745549717-247",
+        "timestamp": "2026-08-03T08:25:49.717286+00:00",
+        "source_ip": "45.33.32.156",
+        "event_source": "aws.iam",
+        "event_name": "AttachUserPolicy",
+        "user_identity": "arn:aws:iam::123456789012:user/contractor",
+        "details": "Attached AdministratorAccess policy to low-privilege user",
+        "base_severity": "CRITICAL"
+    },
+    {
+        "event_id": "evt-1785745549717-905",
+        "timestamp": "2026-08-03T08:25:49.717293+00:00",
+        "source_ip": "192.168.1.105",
+        "event_source": "aws.ec2",
+        "event_name": "AuthorizeSecurityGroupIngress",
+        "user_identity": "arn:aws:iam::123456789012:user/admin",
+        "details": "Opened Port 22 (SSH) to 0.0.0.0/0 (Global Access)",
+        "base_severity": "HIGH"
+    },
+    {
+        "event_id": "evt-1785745549717-654",
+        "timestamp": "2026-08-03T08:25:49.717299+00:00",
+        "source_ip": "198.51.100.22",
+        "event_source": "honeypot.ssh",
+        "event_name": "FailedPasswordAttempt",
+        "user_identity": "root",
+        "details": "Brute force attack detected on SSH honeypot (Port 2222)",
+        "base_severity": "HIGH"
+    },
+    {
+        "event_id": "evt-1785745549717-365",
+        "timestamp": "2026-08-03T08:25:49.717306+00:00",
+        "source_ip": "198.51.100.22",
+        "event_source": "aws.iam",
+        "event_name": "AttachUserPolicy",
+        "user_identity": "arn:aws:iam::123456789012:user/contractor",
+        "details": "Attached AdministratorAccess policy to low-privilege user",
+        "base_severity": "CRITICAL"
+    },
+    {
+        "event_id": "evt-1785745549717-461",
+        "timestamp": "2026-08-03T08:25:49.717313+00:00",
+        "source_ip": "192.168.1.105",
+        "event_source": "aws.s3",
+        "event_name": "PutBucketPolicy",
+        "user_identity": "arn:aws:iam::123456789012:user/developer",
+        "details": "Modified S3 Bucket Policy to allow Public Read access",
+        "base_severity": "CRITICAL"
+    },
+    {
+        "event_id": "evt-1785745549717-235",
+        "timestamp": "2026-08-03T08:25:49.717320+00:00",
+        "source_ip": "185.220.101.5",
+        "event_source": "aws.ec2",
+        "event_name": "DescribeInstances",
+        "user_identity": "arn:aws:iam::123456789012:user/analyst",
+        "details": "Normal read-only query on EC2 instances list",
+        "base_severity": "LOW"
+    },
+    {
+        "event_id": "evt-1785745549717-238",
+        "timestamp": "2026-08-03T08:25:49.717327+00:00",
+        "source_ip": "10.0.0.42",
+        "event_source": "aws.ec2",
+        "event_name": "AuthorizeSecurityGroupIngress",
+        "user_identity": "arn:aws:iam::123456789012:user/admin",
+        "details": "Opened Port 22 (SSH) to 0.0.0.0/0 (Global Access)",
+        "base_severity": "HIGH"
+    },
+    {
+        "event_id": "evt-1785745549717-668",
+        "timestamp": "2026-08-03T08:25:49.717335+00:00",
+        "source_ip": "10.0.0.42",
+        "event_source": "honeypot.ssh",
+        "event_name": "FailedPasswordAttempt",
+        "user_identity": "root",
+        "details": "Brute force attack detected on SSH honeypot (Port 2222)",
+        "base_severity": "HIGH"
+    },
+    {
+        "event_id": "evt-1785745549717-850",
+        "timestamp": "2026-08-03T08:25:49.717357+00:00",
+        "source_ip": "10.0.0.42",
+        "event_source": "aws.ec2",
+        "event_name": "AuthorizeSecurityGroupIngress",
+        "user_identity": "arn:aws:iam::123456789012:user/admin",
+        "details": "Opened Port 22 (SSH) to 0.0.0.0/0 (Global Access)",
+        "base_severity": "HIGH"
+    }
+]
