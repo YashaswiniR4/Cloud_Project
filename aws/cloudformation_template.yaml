@@ -1,14 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   AI-Driven Autonomous Cloud Threat Intelligence Platform
-  Module 4 Enterprise IaC Infrastructure Blueprint: Provisions Zero Trust 3-Tier VPC,
-  Subnets, Security Groups, NACLs, S3 Audit Bucket, and IAM Least Privilege Roles.
+  Module 5 Enterprise IaC Blueprint: Provisions Zero Trust 3-Tier VPC, Subnets,
+  Security Groups, NACLs, S3 WORM Bucket, IAM Roles, CloudWatch Log Group, CloudTrail,
+  and AWS Free Tier EC2 Honeypot Host with Docker & Cowrie Deception Container.
 
 Parameters:
   EnvironmentName:
     Type: String
     Default: threat-intel-prod
     Description: Environment naming prefix for resources.
+
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.micro, t3.micro]
+    Description: AWS Free Tier compatible EC2 instance type.
 
   VpcCidr:
     Type: String
@@ -29,6 +36,17 @@ Parameters:
     Type: String
     Default: 10.0.3.0/24
     Description: CIDR block for Private Database Subnet.
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      AMI: ami-0c7217cdde317cfec # Ubuntu 22.04 LTS us-east-1
+    us-east-2:
+      AMI: ami-05fb0b8c1424f266b # Ubuntu 22.04 LTS us-east-2
+    us-west-2:
+      AMI: ami-008fe2fc65df48daf # Ubuntu 22.04 LTS us-west-2
+    eu-west-1:
+      AMI: ami-0d940f23d527c3ab1 # Ubuntu 22.04 LTS eu-west-1
 
 Resources:
   # ==================================================================
@@ -159,7 +177,7 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
-          Description: SSH brute force trap port
+          Description: SSH trap port for Cowrie honeypot
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -175,15 +193,17 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
-          Description: Restrict outbound egress strictly to HTTPS log stream API endpoints
+          Description: Restrict outbound egress strictly to HTTPS CloudWatch log stream API endpoints
       Tags:
         - Key: Name
           Value: !Sub '${EnvironmentName}-HoneypotSG'
+        - Key: Project
+          Value: CloudThreatIntelPlatform
 
   BackendSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Security group for FastAPI REST backend services
+      GroupDescription: Security group for REST backend services
       VpcId: !Ref HoneypotVPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -219,7 +239,7 @@ Resources:
           Value: !Sub '${EnvironmentName}-DatabaseSG'
 
   # ==================================================================
-  # 5. AUDIT STORAGE: S3 BUCKET FOR CLOUDTRAIL LOGS
+  # 5. AUDIT STORAGE: S3 BUCKET & CLOUDWATCH LOG GROUP
   # ==================================================================
   CloudTrailAuditBucket:
     Type: AWS::S3::Bucket
@@ -240,8 +260,53 @@ Resources:
         - Key: Name
           Value: !Sub '${EnvironmentName}-AuditBucket'
 
+  CloudTrailAuditBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CloudTrailAuditBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AWSCloudTrailAclCheck
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: s3:GetBucketAcl
+            Resource: !GetAtt CloudTrailAuditBucket.Arn
+          - Sid: AWSCloudTrailWrite
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub '${CloudTrailAuditBucket.Arn}/AWSLogs/${AWS::AccountId}/*'
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: bucket-owner-full-control
+
+  HoneypotCloudWatchLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/honeypot/telemetry
+      RetentionInDays: 30
+
+  PlatformCloudTrail:
+    Type: AWS::CloudTrail::Trail
+    DependsOn: CloudTrailAuditBucketPolicy
+    Properties:
+      TrailName: !Sub '${EnvironmentName}-CloudTrail'
+      S3BucketName: !Ref CloudTrailAuditBucket
+      IsLogging: true
+      IncludeGlobalServiceEvents: true
+      IsMultiRegionTrail: true
+      EnableLogFileValidation: true
+      CloudWatchLogsLogGroupArn: !GetAtt HoneypotCloudWatchLogGroup.Arn
+      CloudWatchLogsRoleArn: !GetAtt CloudTrailDeliveryRole.Arn
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-CloudTrail'
+
   # ==================================================================
-  # 6. IAM LEAST PRIVILEGE ROLES & INSTANCE PROFILES (MODULE 4)
+  # 6. IAM LEAST PRIVILEGE ROLES & INSTANCE PROFILES
   # ==================================================================
   EC2HoneypotRole:
     Type: AWS::IAM::Role
@@ -327,29 +392,90 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - s3:GetBucketAcl
-                Resource: !GetAtt CloudTrailAuditBucket.Arn
-              - Effect: Allow
-                Action:
-                  - s3:PutObject
-                Resource: !Sub '${CloudTrailAuditBucket.Arn}/AWSLogs/*'
-                Condition:
-                  StringEquals:
-                    s3:x-amz-acl: bucket-owner-full-control
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt HoneypotCloudWatchLogGroup.Arn
+
+  # ==================================================================
+  # 7. AWS FREE TIER EC2 HONEYPOT HOST
+  # ==================================================================
+  EC2HoneypotInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', AMI]
+      SubnetId: !Ref HoneypotPublicSubnet
+      SecurityGroupIds:
+        - !Ref HoneypotSecurityGroup
+      IamInstanceProfile: !Ref EC2HoneypotInstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+
+          # Update system & install Docker + Python
+          apt-get update -y
+          apt-get install -y docker.io python3 python3-pip rsyslog curl git
+
+          systemctl enable --now docker
+
+          # Create log dir
+          mkdir -p /var/log/honeypot
+          chmod 755 /var/log/honeypot
+
+          # Deploy Cowrie SSH Honeypot Docker Container on port 22
+          docker run -d --name cowrie-ssh-honeypot \
+            -p 22:2222 \
+            -p 2222:2222 \
+            --restart always \
+            cowrie/cowrie:latest || true
+
+          # Start lightweight HTTP Honeypot Trap
+          cat << 'EOF' > /usr/local/bin/http_honeypot.py
+          import http.server
+          import json
+          import datetime
+
+          class HoneypotHandler(http.server.BaseHTTPRequestHandler):
+              def do_GET(self):
+                  log = {"time": str(datetime.datetime.now()), "ip": self.client_address[0], "path": self.path}
+                  with open("/var/log/honeypot/http_requests.log", "a") as f:
+                      f.write(json.dumps(log) + "\n")
+                  self.send_response(200)
+                  self.end_headers()
+                  self.wfile.write(b"<html><body><h1>System Maintenance</h1></body></html>")
+              do_POST = do_GET
+
+          httpd = http.server.HTTPServer(('0.0.0.0', 80), HoneypotHandler)
+          httpd.serve_forever()
+          EOF
+
+          python3 /usr/local/bin/http_honeypot.py &
+
+          echo "[+] EC2 Honeypot Bootstrap Completed." > /var/log/honeypot/status.log
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-EC2Honeypot'
+        - Key: Project
+          Value: CloudThreatIntelPlatform
 
 Outputs:
   VPCId:
     Description: VPC ID of the Honeypot Infrastructure
     Value: !Ref HoneypotVPC
 
-  HoneypotInstanceProfileArn:
-    Description: EC2 Honeypot Instance Profile ARN
-    Value: !GetAtt EC2HoneypotInstanceProfile.Arn
+  EC2HoneypotPublicIp:
+    Description: Public IPv4 address of the EC2 Honeypot Host
+    Value: !GetAtt EC2HoneypotInstance.PublicIp
 
-  LambdaRemediationRoleArn:
-    Description: Lambda Incident Response Role ARN
-    Value: !GetAtt LambdaRemediationRole.Arn
+  EC2HoneypotInstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref EC2HoneypotInstance
 
-  CloudTrailDeliveryRoleArn:
-    Description: CloudTrail Audit Delivery Role ARN
-    Value: !GetAtt CloudTrailDeliveryRole.Arn
+  HoneypotSecurityGroupId:
+    Description: Security Group ID for Honeypot Traps
+    Value: !Ref HoneypotSecurityGroup
+
+  CloudTrailArn:
+    Description: AWS CloudTrail Trail ARN
+    Value: !GetAtt PlatformCloudTrail.Arn
