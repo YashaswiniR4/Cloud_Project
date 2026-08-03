@@ -11,8 +11,13 @@ from backend.database.models import (
 
 # --- Events ---
 def create_event(db: Session, event_data: Dict[str, Any]) -> Event:
+    event_id = event_data.get("event_id", f"evt-{event_data.get('eventID', 'gen')}")
+    existing = db.query(Event).filter(Event.event_id == event_id).first()
+    if existing:
+        return existing
+
     db_event = Event(
-        event_id=event_data.get("event_id", f"evt-{event_data.get('eventID', 'gen')}"),
+        event_id=event_id,
         event_name=event_data.get("event_name", event_data.get("eventName", "Unknown")),
         event_source=event_data.get("event_source", event_data.get("eventSource", "aws")),
         source_ip=event_data.get("source_ip", event_data.get("sourceIPAddress", "0.0.0.0")),
@@ -35,8 +40,13 @@ def get_all_events(db: Session, limit: int = 100) -> List[Event]:
 
 # --- Alerts ---
 def create_alert(db: Session, alert_data: Dict[str, Any]) -> Alert:
+    alert_id = alert_data.get("alert_id", f"alt-{uuid_gen()}")
+    existing = db.query(Alert).filter(Alert.alert_id == alert_id).first()
+    if existing:
+        return existing
+
     db_alert = Alert(
-        alert_id=alert_data.get("alert_id", f"alt-{uuid_gen()}"),
+        alert_id=alert_id,
         severity=alert_data.get("severity", "HIGH"),
         event_name=alert_data.get("event_name", "SECURITY_INCIDENT"),
         source_ip=alert_data.get("source_ip", "0.0.0.0"),
@@ -125,6 +135,10 @@ def get_all_remediation_actions(db: Session) -> List[RemediationAction]:
 
 # --- Audit Logs ---
 def create_audit_log(db: Session, log_id: str, bucket: str, sha256_hash: str) -> AuditLog:
+    existing = db.query(AuditLog).filter(AuditLog.log_id == log_id).first()
+    if existing:
+        return existing
+
     db_audit = AuditLog(
         log_id=log_id,
         vault_bucket=bucket,

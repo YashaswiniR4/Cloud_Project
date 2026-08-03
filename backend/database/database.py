@@ -1,6 +1,6 @@
 """
 Database Session & Connection Management (SQLAlchemy)
-Supports PostgreSQL (Supabase) & SQLite Fallback.
+Connects seamlessly to Supabase PostgreSQL or SQLite fallback.
 """
 
 from sqlalchemy import create_engine
@@ -13,12 +13,24 @@ connect_args = {}
 
 if db_url.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
+    logger.info("Using SQLite database engine.")
+else:
+    logger.info("Using PostgreSQL/Supabase database engine target.")
 
-engine = create_engine(
-    db_url,
-    connect_args=connect_args,
-    pool_pre_ping=True
-)
+try:
+    engine = create_engine(
+        db_url,
+        connect_args=connect_args,
+        pool_pre_ping=True
+    )
+    # Test connection
+    with engine.connect() as conn:
+        pass
+except Exception as e:
+    if not db_url.startswith("sqlite"):
+        logger.warning(f"Could not connect to target PostgreSQL database ({e}). Falling back to local SQLite engine.")
+        db_url = "sqlite:///./threat_intel.db"
+        engine = create_engine(db_url, connect_args={"check_same_thread": False}, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -34,7 +46,7 @@ def get_db():
 
 
 def init_db():
-    """Creates all PostgreSQL / SQLite database tables."""
+    """Creates all PostgreSQL / Supabase / SQLite database tables automatically if missing."""
     from backend.database import models  # noqa: F401
     Base.metadata.create_all(bind=engine)
-    logger.info("Database schema successfully created/verified.")
+    logger.info("Database schema successfully created/verified on target database.")
