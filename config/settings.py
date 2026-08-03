@@ -12,6 +12,16 @@ class Settings:
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
     PORT: int = int(os.getenv("PORT", "8000"))
 
+    # Database Settings (PostgreSQL / Supabase / SQLite fallback)
+    _DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./threat_intel.db")
+
+    @property
+    def DATABASE_URL(self) -> str:
+        url = self._DATABASE_URL
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        return url
+
     # AWS Config
     AWS_REGION: str = os.getenv("AWS_REGION", "us-east-1")
     S3_WORM_BUCKET_NAME: str = os.getenv("S3_WORM_BUCKET_NAME", "threat-intel-worm-audit-vault")

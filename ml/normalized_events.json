@@ -1631,5 +1631,677 @@
         "arn": "arn:aws:iam::123:user/admin"
       }
     }
+  },
+  {
+    "event_id": "ct-init-001",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T14:02:36.159709+00:00",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-001",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T14:02:36.159709+00:00",
+      "eventSource": "iam.amazonaws.com",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ct-init-002",
+    "event_name": "AuthorizeSecurityGroupIngress",
+    "event_source": "ec2.amazonaws.com",
+    "event_time": "2026-08-03T14:02:36.159722+00:00",
+    "source_ip": "203.0.113.99",
+    "user_arn": "arn:aws:iam::123456789012:user/admin",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-002",
+      "eventName": "AuthorizeSecurityGroupIngress",
+      "eventTime": "2026-08-03T14:02:36.159722+00:00",
+      "eventSource": "ec2.amazonaws.com",
+      "sourceIPAddress": "203.0.113.99",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "string",
+    "event_name": "string",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "string",
+    "source_ip": "198.51.100.45",
+    "user_arn": "anonymous",
+    "user_type": "Unknown",
+    "error_code": "string",
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "string",
+      "eventName": "string",
+      "eventTime": "string",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "additionalProp1": {}
+      },
+      "errorCode": "string"
+    }
+  },
+  {
+    "event_id": "ct-init-001",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T14:28:58.588276+00:00",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-001",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T14:28:58.588276+00:00",
+      "eventSource": "iam.amazonaws.com",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ct-init-002",
+    "event_name": "AuthorizeSecurityGroupIngress",
+    "event_source": "ec2.amazonaws.com",
+    "event_time": "2026-08-03T14:28:58.588330+00:00",
+    "source_ip": "203.0.113.99",
+    "user_arn": "arn:aws:iam::123456789012:user/admin",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-002",
+      "eventName": "AuthorizeSecurityGroupIngress",
+      "eventTime": "2026-08-03T14:28:58.588330+00:00",
+      "eventSource": "ec2.amazonaws.com",
+      "sourceIPAddress": "203.0.113.99",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "e2e-ct-101",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T19:25:00Z",
+    "source_ip": "198.51.100.88",
+    "user_arn": "arn:aws:iam::123:user/rogue_admin",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "e2e-ct-101",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T19:25:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.88",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/rogue_admin"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T14:28:59.276972+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T14:28:59.277978+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "sim-1785767509819",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T14:31:49.819Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "sim-1785767509819",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T14:31:49.819Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "ct-init-001",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T14:39:04.869808+00:00",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-001",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T14:39:04.869808+00:00",
+      "eventSource": "iam.amazonaws.com",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ct-init-002",
+    "event_name": "AuthorizeSecurityGroupIngress",
+    "event_source": "ec2.amazonaws.com",
+    "event_time": "2026-08-03T14:39:04.869827+00:00",
+    "source_ip": "203.0.113.99",
+    "user_arn": "arn:aws:iam::123456789012:user/admin",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-002",
+      "eventName": "AuthorizeSecurityGroupIngress",
+      "eventTime": "2026-08-03T14:39:04.869827+00:00",
+      "eventSource": "ec2.amazonaws.com",
+      "sourceIPAddress": "203.0.113.99",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "e2e-ct-101",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T19:25:00Z",
+    "source_ip": "198.51.100.88",
+    "user_arn": "arn:aws:iam::123:user/rogue_admin",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "e2e-ct-101",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T19:25:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.88",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/rogue_admin"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T14:39:05.443114+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T14:39:05.444409+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "ct-init-001",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T14:50:29.018917+00:00",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-001",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T14:50:29.018917+00:00",
+      "eventSource": "iam.amazonaws.com",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ct-init-002",
+    "event_name": "AuthorizeSecurityGroupIngress",
+    "event_source": "ec2.amazonaws.com",
+    "event_time": "2026-08-03T14:50:29.018933+00:00",
+    "source_ip": "203.0.113.99",
+    "user_arn": "arn:aws:iam::123456789012:user/admin",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-002",
+      "eventName": "AuthorizeSecurityGroupIngress",
+      "eventTime": "2026-08-03T14:50:29.018933+00:00",
+      "eventSource": "ec2.amazonaws.com",
+      "sourceIPAddress": "203.0.113.99",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "ct-init-001",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T14:55:53.890935+00:00",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-001",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T14:55:53.890935+00:00",
+      "eventSource": "iam.amazonaws.com",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ct-init-002",
+    "event_name": "AuthorizeSecurityGroupIngress",
+    "event_source": "ec2.amazonaws.com",
+    "event_time": "2026-08-03T14:55:53.890954+00:00",
+    "source_ip": "203.0.113.99",
+    "user_arn": "arn:aws:iam::123456789012:user/admin",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ct-init-002",
+      "eventName": "AuthorizeSecurityGroupIngress",
+      "eventTime": "2026-08-03T14:55:53.890954+00:00",
+      "eventSource": "ec2.amazonaws.com",
+      "sourceIPAddress": "203.0.113.99",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "e2e-ct-101",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T19:25:00Z",
+    "source_ip": "198.51.100.88",
+    "user_arn": "arn:aws:iam::123:user/rogue_admin",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "e2e-ct-101",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T19:25:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.88",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/rogue_admin"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T14:55:55.133420+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T14:55:55.134136+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
   }
 ]
