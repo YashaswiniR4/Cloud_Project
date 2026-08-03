@@ -142,5 +142,879 @@
         "arn": "arn:aws:iam::123:user/admin"
       }
     }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:24:18.576204+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:24:18.576464+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:27:23.069331+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:27:23.070478+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:28:33.735200+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:28:33.735997+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:30:16.286983+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:30:16.287519+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:31:44.715999+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:31:44.716307+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:33:54.948946+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:33:54.949255+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:35:00.720735+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:35:00.721060+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "api-test-01",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T18:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "api-test-01",
+      "eventName": "AttachUserPolicy",
+      "eventTime": "2026-08-03T18:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123:user/attacker"
+      },
+      "errorCode": null
+    }
+  },
+  {
+    "event_id": "master-ev-99",
+    "event_name": "AttachUserPolicy",
+    "event_source": "iam.amazonaws.com",
+    "event_time": "2026-08-03T17:00:00Z",
+    "source_ip": "198.51.100.45",
+    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+    "user_type": "IAMUser",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "master-ev-99",
+      "eventTime": "2026-08-03T17:00:00Z",
+      "eventSource": "iam.amazonaws.com",
+      "eventName": "AttachUserPolicy",
+      "sourceIPAddress": "198.51.100.45",
+      "userIdentity": {
+        "type": "IAMUser",
+        "arn": "arn:aws:iam::123456789012:user/attacker"
+      }
+    }
+  },
+  {
+    "event_id": "ev-01",
+    "event_name": "StopLogging",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:36:37.477782+00:00",
+    "source_ip": "203.0.113.5",
+    "user_arn": "arn:aws:iam::123:user/rogue",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": true,
+    "severity": "HIGH",
+    "threat_score": 85.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-01",
+      "eventName": "StopLogging",
+      "sourceIPAddress": "203.0.113.5",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/rogue"
+      }
+    }
+  },
+  {
+    "event_id": "ev-02",
+    "event_name": "DescribeInstances",
+    "event_source": "unknown.amazonaws.com",
+    "event_time": "2026-08-03T13:36:37.478710+00:00",
+    "source_ip": "10.0.1.15",
+    "user_arn": "arn:aws:iam::123:user/admin",
+    "user_type": "Unknown",
+    "error_code": null,
+    "is_high_risk": false,
+    "severity": "LOW",
+    "threat_score": 10.0,
+    "aws_region": "us-east-1",
+    "raw_payload": {
+      "eventID": "ev-02",
+      "eventName": "DescribeInstances",
+      "sourceIPAddress": "10.0.1.15",
+      "userIdentity": {
+        "arn": "arn:aws:iam::123:user/admin"
+      }
+    }
   }
 ]

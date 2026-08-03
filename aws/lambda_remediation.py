@@ -16,6 +16,14 @@ class LambdaRemediationHandler:
         self.remediation_log: List[Dict[str, Any]] = []
         logger.info(f"Initialized Lambda Remediation Handler for SG: {self.security_group_id}")
 
+    def revoke_security_group_ingress(self, source_ip: str) -> Dict[str, Any]:
+        """Revokes Security Group ingress for blocked attacker IP."""
+        return self.execute_remediation({"source_ip": source_ip, "threat_score": 85.0})
+
+    def disable_compromised_iam_keys(self, user_arn: str) -> Dict[str, Any]:
+        """Deactivates compromised IAM access keys."""
+        return self.execute_remediation({"user_arn": user_arn, "threat_score": 95.0})
+
     def execute_remediation(self, event: Dict[str, Any]) -> Dict[str, Any]:
         """Processes high-risk security alert and triggers serverless containment."""
         source_ip = event.get("source_ip", "0.0.0.0")

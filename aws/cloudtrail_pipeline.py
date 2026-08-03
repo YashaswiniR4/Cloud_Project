@@ -53,7 +53,6 @@ class CloudTrailTelemetryPipeline:
             if field not in record or not record[field]:
                 return False, f"Missing required field: '{field}'"
 
-        # Validate IP format basic sanity check if present
         source_ip = record.get("sourceIPAddress", "")
         if source_ip and not isinstance(source_ip, str):
             return False, "Invalid sourceIPAddress type."
@@ -62,10 +61,10 @@ class CloudTrailTelemetryPipeline:
 
     def normalize_record(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """Normalizes raw CloudTrail JSON record into standardized schema."""
-        event_name = record.get("eventName", "Unknown")
-        user_identity = record.get("userIdentity", {})
-        source_ip = record.get("sourceIPAddress", "0.0.0.0")
-        event_time = record.get("eventTime", datetime.now(timezone.utc).isoformat())
+        event_name = str(record.get("eventName") or "Unknown")
+        user_identity = record.get("userIdentity") or {}
+        source_ip = str(record.get("sourceIPAddress") or "0.0.0.0")
+        event_time = str(record.get("eventTime") or datetime.now(timezone.utc).isoformat())
         error_code = record.get("errorCode", None)
 
         is_high_risk = (event_name in self.HIGH_RISK_EVENTS) or (error_code == "AccessDenied")
@@ -75,19 +74,21 @@ class CloudTrailTelemetryPipeline:
         user_arn = user_identity.get("arn", user_identity.get("principalId", "anonymous")) if isinstance(user_identity, dict) else "anonymous"
         user_type = user_identity.get("type", "Unknown") if isinstance(user_identity, dict) else "Unknown"
 
+        event_id = record.get("eventID") or f"evt-{hash(event_time + source_ip + event_name)}"
+
         normalized = {
-            "event_id": record.get("eventID", f"evt-{hash(event_time + source_ip + event_name)}"),
+            "event_id": str(event_id),
             "event_name": event_name,
-            "event_source": record.get("eventSource", "unknown.amazonaws.com"),
+            "event_source": str(record.get("eventSource") or "unknown.amazonaws.com"),
             "event_time": event_time,
             "source_ip": source_ip,
-            "user_arn": user_arn,
-            "user_type": user_type,
+            "user_arn": str(user_arn),
+            "user_type": str(user_type),
             "error_code": error_code,
             "is_high_risk": is_high_risk,
             "severity": severity,
             "threat_score": threat_score,
-            "aws_region": record.get("awsRegion", "us-east-1"),
+            "aws_region": str(record.get("awsRegion") or "us-east-1"),
             "raw_payload": record
         }
         return normalized

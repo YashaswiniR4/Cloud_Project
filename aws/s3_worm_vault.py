@@ -7,7 +7,7 @@ and audit log immutability verification for Cloud Threat Telemetry.
 import json
 import hashlib
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime, timezone
 from config.settings import settings
 from config.logging_config import logger
@@ -20,6 +20,11 @@ class S3WORMVaultManager:
         self.object_store: Dict[str, Dict[str, Any]] = {}
         self.default_retention_days = 365
         logger.info(f"Initialized S3 WORM Vault Manager for bucket: {self.bucket_name}")
+
+    @property
+    def audit_logs(self) -> List[Dict[str, Any]]:
+        """Returns list of all locked audit log records in WORM storage."""
+        return list(self.object_store.values())
 
     def get_bucket_policy(self) -> Dict[str, Any]:
         """Returns strict S3 bucket policy enforcing TLS 1.3 and KMS SSE."""
