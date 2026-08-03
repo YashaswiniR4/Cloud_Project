@@ -21,13 +21,14 @@ class IncidentAlertDispatcher:
         severity = alert_details.get("severity", "HIGH")
         source_ip = alert_details.get("source_ip", "0.0.0.0")
         event_name = alert_details.get("event_name", alert_details.get("threat_type", "SECURITY_EVENT"))
+        threat_score = alert_details.get("threat_score", 0.0)
 
         message = (
             f"🚨 [ALERT - {severity}] Cloud Threat Detected!\n"
             f"Timestamp: {timestamp}\n"
             f"Event: {event_name}\n"
             f"Source IP: {source_ip}\n"
-            f"Threat Score: {alert_details.get('threat_score', 'N/A')}\n"
+            f"Threat Score: {threat_score}\n"
             f"Remediation: Autonomous isolation executed via Lambda."
         )
 
@@ -35,6 +36,9 @@ class IncidentAlertDispatcher:
             "timestamp": timestamp,
             "sns_topic_arn": self.sns_topic_arn,
             "severity": severity,
+            "event_name": event_name,
+            "source_ip": source_ip,
+            "threat_score": threat_score,
             "message": message,
             "status": "DELIVERED"
         }

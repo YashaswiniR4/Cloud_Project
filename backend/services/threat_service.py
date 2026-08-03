@@ -48,7 +48,35 @@ class ThreatOperationsService:
         self.all_threat_logs: List[Dict[str, Any]] = []
         self.dispatched_alerts: List[Dict[str, Any]] = []
 
-        logger.info("Threat Operations Service fully initialized.")
+        # Seed baseline telemetry for live SOC dashboard operational readiness
+        self._seed_initial_telemetry()
+        logger.info("Threat Operations Service fully initialized with live baseline telemetry.")
+
+    def _seed_initial_telemetry(self):
+        """Processes baseline events to populate ML pipeline and S3 WORM Vault on startup."""
+        sample_batch = {
+            "Records": [
+                {
+                    "eventID": "ct-init-001",
+                    "eventName": "AttachUserPolicy",
+                    "eventTime": datetime.now(timezone.utc).isoformat(),
+                    "eventSource": "iam.amazonaws.com",
+                    "sourceIPAddress": "198.51.100.45",
+                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/attacker"}
+                },
+                {
+                    "eventID": "ct-init-002",
+                    "eventName": "AuthorizeSecurityGroupIngress",
+                    "eventTime": datetime.now(timezone.utc).isoformat(),
+                    "eventSource": "ec2.amazonaws.com",
+                    "sourceIPAddress": "203.0.113.99",
+                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/admin"}
+                }
+            ]
+        }
+        self.process_cloudtrail_batch(sample_batch)
+        self.simulate_ssh_attack("198.51.100.99", "root", "toor")
+        self.simulate_http_attack("203.0.113.88", "/admin", "POST", payload="' OR '1'='1")
 
     def process_cloudtrail_batch(self, batch_payload: Dict[str, Any]) -> Dict[str, Any]:
         """Ingests CloudTrail events, scores threats via ML, and dispatches alerts."""
@@ -61,6 +89,10 @@ class ThreatOperationsService:
             classification = self.classifier.classify_log(event)
             anomaly = self.anomaly_detector.detect(features)
             explanation = self.xai_explainer.calculate_shap_values(features, classification["prediction"])
+
+            # Threat Intel lookup
+            reputation = self.threat_intel.check_ip_reputation(event["source_ip"])
+            event["threat_intel"] = reputation
 
             event["ml_classification"] = classification
             event["ml_anomaly_score"] = anomaly
@@ -97,6 +129,8 @@ class ThreatOperationsService:
         # Threat Intel Lookup
         reputation = self.threat_intel.check_ip_reputation(source_ip)
         telemetry["threat_intel"] = reputation
+        telemetry["severity"] = "HIGH"
+        telemetry["event_name"] = "SSH_BRUTE_FORCE"
 
         self.all_threat_logs.append(telemetry)
 
@@ -109,6 +143,9 @@ class ThreatOperationsService:
         })
         self.dispatched_alerts.append(alert)
 
+        # Serverless Remediation
+        self.remediation_handler.revoke_security_group_ingress(source_ip)
+
         return telemetry
 
     def simulate_http_attack(self, source_ip: str, path: str, method: str, payload: str) -> Dict[str, Any]:
@@ -119,17 +156,20 @@ class ThreatOperationsService:
         # Threat Intel Lookup
         reputation = self.threat_intel.check_ip_reputation(source_ip)
         telemetry["threat_intel"] = reputation
+        telemetry["severity"] = "HIGH" if telemetry["threat_score"] > 70.0 else "MEDIUM"
+        telemetry["event_name"] = telemetry["threat_type"]
 
         self.all_threat_logs.append(telemetry)
 
         if telemetry["threat_score"] > 70.0:
             alert = self.alert_dispatcher.dispatch_alert({
-                "severity": "HIGH",
+                "severity": telemetry["severity"],
                 "source_ip": source_ip,
                 "event_name": telemetry["threat_type"],
                 "threat_score": telemetry["threat_score"]
             })
             self.dispatched_alerts.append(alert)
+            self.remediation_handler.revoke_security_group_ingress(source_ip)
 
         return result
 
@@ -137,7 +177,7 @@ class ThreatOperationsService:
         """Returns consolidated SOC metrics."""
         return {
             "total_ingested_events": self.pipeline.total_ingested + len(self.ssh_honeypot.get_captured_telemetry()) + len(self.http_honeypot.get_captured_telemetry()),
-            "high_risk_threats": self.pipeline.total_high_risk,
+            "high_risk_threats": len([e for e in self.all_threat_logs if e.get("is_high_risk", False) or e.get("severity") == "HIGH"]),
             "anomalies_detected": len([e for e in self.all_threat_logs if e.get("ml_anomaly_score", {}).get("is_zero_day_anomaly", False)]),
             "alerts_dispatched": len(self.dispatched_alerts),
             "honeypot_attacks_captured": len(self.ssh_honeypot.get_captured_telemetry()) + len(self.http_honeypot.get_captured_telemetry()),
@@ -151,6 +191,7 @@ class ThreatOperationsService:
             "metrics": self.get_metrics(),
             "recent_threats": self.all_threat_logs[-10:],
             "recent_alerts": self.dispatched_alerts[-10:],
+            "remediation_actions": self.remediation_handler.remediation_log[-10:],
             "honeypot_summary": {
                 "ssh_honeypot_active": self.ssh_honeypot.is_active,
                 "ssh_logs_count": len(self.ssh_honeypot.get_captured_telemetry()),

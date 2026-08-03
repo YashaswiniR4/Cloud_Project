@@ -62,10 +62,19 @@ def get_alerts(service: ThreatOperationsService = Depends(get_threat_service)):
     }
 
 
+@api_router.get("/remediations", summary="Retrieve Automated Lambda Remediation Logs")
+def get_remediations(service: ThreatOperationsService = Depends(get_threat_service)):
+    """Retrieves all automated serverless incident response & remediation logs."""
+    return {
+        "total_remediations": len(service.remediation_handler.remediation_log),
+        "remediations": service.remediation_handler.remediation_log
+    }
+
+
 @api_router.get("/threats", summary="Retrieve Active Threat Intel Feeds")
 def get_threats(service: ThreatOperationsService = Depends(get_threat_service)):
     """Retrieves detected security threats and high-risk events."""
-    high_risk = [e for e in service.all_threat_logs if e.get("is_high_risk", False) or e.get("threat_score", 0) > 70]
+    high_risk = [e for e in service.all_threat_logs if e.get("is_high_risk", False) or e.get("severity") == "HIGH" or e.get("threat_score", 0) > 70]
     return {
         "total_threats": len(high_risk),
         "threats": high_risk

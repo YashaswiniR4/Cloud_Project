@@ -34,6 +34,11 @@ export const getAlerts = async () => {
   return response.data;
 };
 
+export const getRemediations = async () => {
+  const response = await api.get('/remediations');
+  return response.data;
+};
+
 export const getThreats = async () => {
   const response = await api.get('/threats');
   return response.data;
