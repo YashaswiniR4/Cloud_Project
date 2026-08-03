@@ -11,12 +11,13 @@
         "ec2:DescribeSecurityGroups",
         "ec2:DescribeInstances"
       ],
-      "Resource": "*",
+      "Resource": "arn:aws:ec2:us-east-1:123456789012:security-group/*",
       "Condition": {
         "StringEquals": {
           "aws:ResourceTag/Project": "CloudThreatIntelPlatform"
         }
-      }
+      },
+      "Rationale": "Grants Lambda remediation engine narrow access to alter Security Group ingress rules specifically tagged for the Threat Platform."
     },
     {
       "Sid": "AllowSNSSecurityAlertPublish",
@@ -24,7 +25,8 @@
       "Action": [
         "sns:Publish"
       ],
-      "Resource": "arn:aws:sns:*:*:threat-intel-alerts-topic"
+      "Resource": "arn:aws:sns:us-east-1:123456789012:threat-intel-alerts-topic",
+      "Rationale": "Enables Lambda to dispatch automated high-severity incident notification messages to the SOC SNS topic."
     }
   ]
 }

@@ -1,0 +1,43 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::threat-intel-worm-audit-vault",
+      "Rationale": "Required by AWS CloudTrail service to verify bucket access permissions prior to log delivery."
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::threat-intel-worm-audit-vault/AWSLogs/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      },
+      "Rationale": "Enables CloudTrail service to deliver encrypted audit log objects to designated S3 WORM path while enforcing bucket owner ownership."
+    },
+    {
+      "Sid": "AWSCloudTrailLogGroupDelivery",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/cloudtrail/*",
+      "Rationale": "Allows CloudTrail to push real-time audit event logs directly to CloudWatch Log Stream for live security analysis."
+    }
+  ]
+}

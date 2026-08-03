@@ -10,7 +10,8 @@
         "logs:PutLogEvents",
         "logs:DescribeLogStreams"
       ],
-      "Resource": "arn:aws:logs:*:*:log-group:/aws/honeypot/*"
+      "Resource": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/honeypot/*",
+      "Rationale": "Required to stream SSH and HTTP honeypot attack log events to CloudWatch for central SOC aggregation."
     },
     {
       "Sid": "AllowSQSTelemetryStream",
@@ -19,7 +20,8 @@
         "sqs:SendMessage",
         "sqs:SendMessageBatch"
       ],
-      "Resource": "arn:aws:sqs:*:*:threat-intel-telemetry-queue"
+      "Resource": "arn:aws:sqs:us-east-1:123456789012:threat-intel-telemetry-queue",
+      "Rationale": "Required for sending real-time honeypot attack vectors asynchronously into the telemetry ingestion queue."
     },
     {
       "Sid": "DenyAllEC2AdminActions",
@@ -30,7 +32,8 @@
         "ec2:Authorize*",
         "iam:*"
       ],
-      "Resource": "*"
+      "Resource": "*",
+      "Rationale": "Zero Trust Containment Guardrail: Explicitly blocks compromised honeypots from pivoting or altering cloud infrastructure."
     }
   ]
 }
