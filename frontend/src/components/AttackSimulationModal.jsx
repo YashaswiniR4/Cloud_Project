@@ -36,14 +36,14 @@ export const AttackSimulationModal = ({ isOpen, onClose, onRefresh }) => {
             eventSource: 'iam.amazonaws.com',
             sourceIPAddress: cloudtrailIp,
             userIdentity: { type: 'IAMUser', arn: cloudtrailArn },
-            errorCode: cloudtrailEvent === 'AccessDenied' ? 'AccessDenied' : None
+            errorCode: cloudtrailEvent === 'AccessDenied' ? 'AccessDenied' : null
           }
         ]
       });
       setResult(res);
       onRefresh();
     } catch (err) {
-      setResult({ error: err.message });
+      setResult({ error: err.response?.data?.detail || err.message });
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ export const AttackSimulationModal = ({ isOpen, onClose, onRefresh }) => {
       setResult(res);
       onRefresh();
     } catch (err) {
-      setResult({ error: err.message });
+      setResult({ error: err.response?.data?.detail || err.message });
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ export const AttackSimulationModal = ({ isOpen, onClose, onRefresh }) => {
       setResult(res);
       onRefresh();
     } catch (err) {
-      setResult({ error: err.message });
+      setResult({ error: err.response?.data?.detail || err.message });
     } finally {
       setLoading(false);
     }
