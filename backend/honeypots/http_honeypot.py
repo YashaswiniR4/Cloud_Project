@@ -5,17 +5,20 @@ Simulates vulnerable web endpoints (/admin, /wp-login.php, /.env) to capture web
 
 from typing import Dict, Any, List
 from datetime import datetime, timezone
+from config.settings import settings
+from config.logging_config import logger
 
 
 class HTTPHoneypotEngine:
-    def __init__(self, port: int = 8080):
-        self.port = port
+    def __init__(self, port: int = None):
+        self.port = port if port is not None else settings.HTTP_HONEYPOT_PORT
         self.is_active = False
         self.captured_logs: List[Dict[str, Any]] = []
 
     def start_honeypot(self) -> Dict[str, Any]:
         """Starts HTTP deception web server listener."""
         self.is_active = True
+        logger.info(f"HTTP Honeypot Deception Server Started on port {self.port}")
         return {
             "status": "RUNNING",
             "service": "HTTP_HONEYPOT",
@@ -26,6 +29,7 @@ class HTTPHoneypotEngine:
     def handle_request(self, source_ip: str, path: str, method: str = "GET", headers: Dict[str, str] = None, payload: str = "") -> Dict[str, Any]:
         """Processes request to honeypot trap, logs threat vector."""
         if not self.is_active:
+            logger.error("HTTP Honeypot request received while engine was offline.")
             raise RuntimeError("HTTP Honeypot engine is offline.")
 
         headers = headers or {}
@@ -54,6 +58,7 @@ class HTTPHoneypotEngine:
             "threat_score": threat_score
         }
         self.captured_logs.append(log_entry)
+        logger.warning(f"HTTP Exploit Probe Captured [{threat_type}]: {path} from IP {source_ip}")
         return {
             "http_status": 200 if path == "/" else 404,
             "response_body": "<html><body>Access Denied</body></html>",
@@ -67,6 +72,4 @@ class HTTPHoneypotEngine:
 
 if __name__ == "__main__":
     http_trap = HTTPHoneypotEngine()
-    print(http_trap.start_honeypot())
-    res = http_trap.handle_request("203.0.113.88", "/admin?cmd=cat%20/etc/passwd", "GET")
-    print("Handled request:", res)
+    logger.info(f"Start HTTP Honeypot: {http_trap.start_honeypot()}")

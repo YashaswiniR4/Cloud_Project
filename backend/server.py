@@ -4,13 +4,12 @@ Provides standard REST endpoints for telemetry ingestion, threat monitoring, and
 """
 
 import json
-import os
-import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import urlparse
 from typing import Dict, Any, List
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config.settings import settings
+from config.logging_config import logger
 
 from aws.s3_worm_vault import S3WORMVaultManager
 from aws.cloudtrail_ingestor import CloudTrailIngestor
@@ -32,6 +31,10 @@ threat_events_store: List[Dict[str, Any]] = []
 
 
 class ThreatIntelRESTHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        """Overrides default HTTPServer logging to use system logger."""
+        logger.info(f"HTTP Server Request: {self.address_string()} - {format % args}")
+
     def _send_json_response(self, status_code: int, data: Dict[str, Any]):
         self.send_response(status_code)
         self.send_header("Content-Type", "application/json")
@@ -93,7 +96,8 @@ class ThreatIntelRESTHandler(BaseHTTPRequestHandler):
 
         try:
             payload = json.loads(body)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as err:
+            logger.error(f"Malformed JSON payload in request to {path}: {err}")
             self._send_json_response(400, {"error": "Invalid JSON format"})
             return
 
@@ -128,12 +132,13 @@ class ThreatIntelRESTHandler(BaseHTTPRequestHandler):
             self._send_json_response(404, {"error": "Endpoint not found"})
 
 
-def run_server(port: int = 8000):
-    server_address = ("", port)
+def run_server(port: int = None):
+    server_port = port or settings.PORT
+    server_address = ("", server_port)
     httpd = HTTPServer(server_address, ThreatIntelRESTHandler)
-    print(f"Server running on port {port}...")
+    logger.info(f"Autonomous Threat Intel Backend Server running on port {server_port}...")
     httpd.serve_forever()
 
 
 if __name__ == "__main__":
-    run_server(8000)
+    run_server()

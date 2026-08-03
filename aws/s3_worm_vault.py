@@ -7,16 +7,19 @@ and audit log immutability verification for Cloud Threat Telemetry.
 import json
 import hashlib
 import time
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from datetime import datetime, timezone
+from config.settings import settings
+from config.logging_config import logger
 
 
 class S3WORMVaultManager:
-    def __init__(self, bucket_name: str = "threat-intel-worm-audit-vault", kms_key_arn: Optional[str] = None):
-        self.bucket_name = bucket_name
-        self.kms_key_arn = kms_key_arn or f"arn:aws:kms:us-east-1:123456789012:key/worm-audit-key"
+    def __init__(self, bucket_name: Optional[str] = None, kms_key_arn: Optional[str] = None):
+        self.bucket_name = bucket_name or settings.S3_WORM_BUCKET_NAME
+        self.kms_key_arn = kms_key_arn or settings.KMS_KEY_ARN
         self.object_store: Dict[str, Dict[str, Any]] = {}
         self.default_retention_days = 365
+        logger.info(f"Initialized S3 WORM Vault Manager for bucket: {self.bucket_name}")
 
     def get_bucket_policy(self) -> Dict[str, Any]:
         """Returns strict S3 bucket policy enforcing TLS 1.3 and KMS SSE."""
@@ -66,6 +69,7 @@ class S3WORMVaultManager:
     def put_immutable_log(self, key: str, log_payload: Dict[str, Any], retention_days: Optional[int] = None) -> Dict[str, Any]:
         """Stores a log payload in WORM storage mode with cryptographic SHA-256 digest & lock timer."""
         if key in self.object_store:
+            logger.error(f"WORM Policy Violation: Object '{key}' modification attempt blocked.")
             raise PermissionError(f"WORM Policy Violation: Object '{key}' already exists and is locked against modifications.")
 
         ret_days = retention_days if retention_days is not None else self.default_retention_days
@@ -85,6 +89,7 @@ class S3WORMVaultManager:
             "version_id": f"v1-{int(time.time() * 1000)}"
         }
         self.object_store[key] = record
+        logger.info(f"Immutable WORM Log Stored: key='{key}', SHA256='{sha256_hash[:10]}...'")
         return {
             "status": "SUCCESS",
             "key": key,
@@ -96,6 +101,7 @@ class S3WORMVaultManager:
     def verify_object_integrity(self, key: str) -> Dict[str, Any]:
         """Validates that stored object has not been tampered with."""
         if key not in self.object_store:
+            logger.warning(f"Integrity check failed: Key '{key}' not found.")
             return {"valid": False, "reason": "Object not found"}
 
         obj = self.object_store[key]
@@ -103,6 +109,7 @@ class S3WORMVaultManager:
         recalculated_hash = hashlib.sha256(raw_bytes).hexdigest()
 
         is_valid = (recalculated_hash == obj["sha256"])
+        logger.info(f"Integrity Verification for '{key}': valid={is_valid}")
         return {
             "key": key,
             "valid": is_valid,
@@ -116,6 +123,7 @@ class S3WORMVaultManager:
         """Attempts deletion - should fail under WORM policy."""
         if key in self.object_store:
             if self.object_store[key]["legal_hold"] == "ON":
+                logger.warning(f"Prevented unauthorized deletion attempt on WORM object: '{key}'")
                 return {
                     "deleted": False,
                     "reason": "AccessDenied: S3 Object Lock Compliance Legal Hold Active (WORM Mode Enforced)"
@@ -127,10 +135,6 @@ class S3WORMVaultManager:
 
 if __name__ == "__main__":
     vault = S3WORMVaultManager()
-    print("Testing S3 WORM Vault Manager...")
+    logger.info("Testing S3 WORM Vault Manager...")
     res = vault.put_immutable_log("cloudtrail/2026/08/03/log1.json", {"event": "UnauthorizedS3Access", "ip": "192.168.1.100"})
-    print("Log stored:", res)
-    integrity = vault.verify_object_integrity("cloudtrail/2026/08/03/log1.json")
-    print("Integrity check:", integrity)
-    delete_attempt = vault.attempt_delete_object("cloudtrail/2026/08/03/log1.json")
-    print("Delete attempt:", delete_attempt)
+    logger.info(f"Log stored: {res}")

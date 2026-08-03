@@ -5,8 +5,9 @@ and normalizes records into threat intelligence feeds.
 """
 
 import json
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime, timezone
+from config.logging_config import logger
 
 
 class CloudTrailIngestor:
@@ -24,6 +25,7 @@ class CloudTrailIngestor:
     def __init__(self):
         self.ingested_count = 0
         self.high_risk_count = 0
+        logger.info("Initialized CloudTrail Telemetry Ingestor Engine.")
 
     def parse_record(self, record: Dict[str, Any]) -> Dict[str, Any]:
         """Parses individual CloudTrail record and calculates threat indicator score."""
@@ -63,6 +65,9 @@ class CloudTrailIngestor:
             self.ingested_count += 1
             if parsed["is_high_risk"]:
                 self.high_risk_count += 1
+                logger.warning(f"High-Risk CloudTrail Event Ingested: {parsed['event_name']} from IP {parsed['source_ip']}")
+
+        logger.info(f"Ingested batch of {len(parsed_records)} CloudTrail logs ({self.high_risk_count} total high risk).")
         return parsed_records
 
     def filter_high_risk_events(self, parsed_events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -81,19 +86,9 @@ if __name__ == "__main__":
                 "awsRegion": "us-east-1",
                 "sourceIPAddress": "198.51.100.45",
                 "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/attacker"}
-            },
-            {
-                "eventID": "4444-5555-6666",
-                "eventTime": "2026-08-03T12:05:00Z",
-                "eventSource": "s3.amazonaws.com",
-                "eventName": "GetObject",
-                "awsRegion": "us-east-1",
-                "sourceIPAddress": "192.168.1.10",
-                "userIdentity": {"type": "AssumedRole", "arn": "arn:aws:sts::123456789012:assumed-role/AppRole"}
             }
         ]
     }
     ingestor = CloudTrailIngestor()
     events = ingestor.ingest_log_batch(sample_cloudtrail_batch)
-    print(f"Ingested {len(events)} events. High risk events:")
-    print(json.dumps(ingestor.filter_high_risk_events(events), indent=2))
+    logger.info(f"Ingested {len(events)} events.")

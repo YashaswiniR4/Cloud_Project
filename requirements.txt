@@ -1,0 +1,18 @@
+# Core Platform Dependencies
+python-dotenv>=1.0.0
+boto3>=1.28.0
+
+# API & Web Server (Production framework support)
+fastapi>=0.100.0
+uvicorn>=0.22.0
+requests>=2.31.0
+
+# Machine Learning & Threat Intelligence Analytics
+numpy>=1.24.0
+scikit-learn>=1.3.0
+xgboost>=1.7.0
+shap>=0.42.0
+
+# Testing & Quality Assurance
+pytest>=7.4.0
+pytest-cov>=4.1.0

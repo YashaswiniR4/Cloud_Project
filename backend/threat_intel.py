@@ -4,6 +4,8 @@ Queries threat feeds (e.g. AbuseIPDB) and calculates IP reputation & risk score.
 """
 
 from typing import Dict, Any
+from config.settings import settings
+from config.logging_config import logger
 
 
 class ThreatIntelFeedManager:
@@ -13,10 +15,16 @@ class ThreatIntelFeedManager:
         "192.0.2.1": {"abuse_score": 75, "country": "BR", "isp": "HackerBotnet", "reports": 89}
     }
 
+    def __init__(self):
+        self.api_key = settings.ABUSEIPDB_API_KEY
+        logger.info("Initialized Threat Intelligence Feed Manager.")
+
     def check_ip_reputation(self, ip_address: str) -> Dict[str, Any]:
         """Queries IP reputation database."""
+        logger.info(f"Querying threat intelligence feed for IP: {ip_address}")
         if ip_address in self.KNOWN_MALICIOUS_IPS:
             data = self.KNOWN_MALICIOUS_IPS[ip_address]
+            logger.warning(f"Malicious IP Detected in Threat Intel Feed: {ip_address} (Score: {data['abuse_score']})")
             return {
                 "ip": ip_address,
                 "is_known_attacker": True,
@@ -40,5 +48,4 @@ class ThreatIntelFeedManager:
 
 if __name__ == "__main__":
     intel = ThreatIntelFeedManager()
-    print("Checking bad IP:", intel.check_ip_reputation("198.51.100.45"))
-    print("Checking good IP:", intel.check_ip_reputation("10.0.0.1"))
+    logger.info(f"Bad IP Check: {intel.check_ip_reputation('198.51.100.45')}")

@@ -5,12 +5,15 @@ Dispatches security alerts to AWS SNS topics and SOC Webhooks (Slack/Teams).
 
 from typing import Dict, Any, List
 from datetime import datetime, timezone
+from config.settings import settings
+from config.logging_config import logger
 
 
 class IncidentAlertDispatcher:
-    def __init__(self, sns_topic_arn: str = "arn:aws:sns:us-east-1:123456789012:SOCAlertsTopic"):
-        self.sns_topic_arn = sns_topic_arn
+    def __init__(self, sns_topic_arn: str = None):
+        self.sns_topic_arn = sns_topic_arn or settings.SNS_TOPIC_ARN
         self.dispatched_alerts: List[Dict[str, Any]] = []
+        logger.info(f"Initialized Incident Alert Dispatcher for SNS topic: {self.sns_topic_arn}")
 
     def dispatch_alert(self, alert_details: Dict[str, Any]) -> Dict[str, Any]:
         """Formats and dispatches incident alert payload."""
@@ -36,6 +39,7 @@ class IncidentAlertDispatcher:
             "status": "DELIVERED"
         }
         self.dispatched_alerts.append(alert_record)
+        logger.warning(f"ALERT DISPATCHED [{severity}]: {event_name} from {source_ip}")
         return alert_record
 
 
@@ -47,4 +51,4 @@ if __name__ == "__main__":
         "event_name": "AttachUserPolicy",
         "threat_score": 95.0
     })
-    print("Dispatched alert:", res["message"])
+    logger.info(f"Dispatched Alert Message:\n{res['message']}")
