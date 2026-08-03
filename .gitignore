@@ -7,6 +7,11 @@
 .coverage
 htmlcov/
 
+# Node & Frontend dependencies/builds
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
 # Logs & temp stores
 logs/*.json
 *.log

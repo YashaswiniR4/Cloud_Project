@@ -1,102 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Autonomous Cloud Threat Intelligence Console</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <header>
-    <div class="logo">
-      <div class="logo-icon">🛡️</div>
-      <div>
-        <h2>Autonomous Cloud Threat Intelligence Platform</h2>
-        <small style="color: var(--text-muted);">SOC Live Operations & Deception Control</small>
-      </div>
-    </div>
-    <div>
-      <span class="badge badge-low" id="system-health">System: Healthy</span>
-    </div>
-  </header>
-
-  <section class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-title">Total Ingested Telemetry</div>
-      <div class="metric-value" id="metric-ingested">0</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">Active Security Threats</div>
-      <div class="metric-value" id="metric-threats" style="color: var(--accent-red);">0</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">Active Honeypot Traps</div>
-      <div class="metric-value" id="metric-honeypots">2</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-title">WORM Log Storage</div>
-      <div class="metric-value" id="metric-worm">ENFORCED</div>
-    </div>
-  </section>
-
-  <main class="main-layout">
-    <section class="panel">
-      <div class="panel-header">
-        <h3 class="panel-title">⚡ Live Security Event Feed & XAI Analysis</h3>
-        <button class="btn" id="btn-refresh">Refresh Feed</button>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Event / Vector</th>
-            <th>Source IP</th>
-            <th>Severity</th>
-            <th>Threat Score</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="threat-feed-body">
-          <tr>
-            <td colspan="5" style="text-align: center; color: var(--text-muted);">Loading telemetry events...</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <aside style="display: flex; flex-direction: column; gap: 20px;">
-      <div class="panel">
-        <div class="panel-header">
-          <h3 class="panel-title">🎯 Honeypot Deception Launcher</h3>
-        </div>
-        <form id="ssh-sim-form">
-          <h4 style="margin-bottom: 8px; color: var(--accent-cyan);">Simulate SSH Brute Force</h4>
-          <div class="form-group">
-            <label>Attacker IP</label>
-            <input type="text" class="form-control" id="ssh-ip" value="198.51.100.45">
-          </div>
-          <div class="form-group">
-            <label>Username</label>
-            <input type="text" class="form-control" id="ssh-user" value="root">
-          </div>
-          <button type="submit" class="btn" style="width: 100%;">Trigger SSH Attack</button>
-        </form>
-        <hr style="margin: 16px 0; border-color: var(--border-color);">
-        <form id="http-sim-form">
-          <h4 style="margin-bottom: 8px; color: var(--accent-cyan);">Simulate Web Exploit</h4>
-          <div class="form-group">
-            <label>Attacker IP</label>
-            <input type="text" class="form-control" id="http-ip" value="203.0.113.88">
-          </div>
-          <div class="form-group">
-            <label>Exploit Payload</label>
-            <input type="text" class="form-control" id="http-payload" value="' OR '1'='1">
-          </div>
-          <button type="submit" class="btn" style="width: 100%;">Trigger Web Payload</button>
-        </form>
-      </div>
-    </aside>
-  </main>
-
-  <script src="app.js"></script>
-</body>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Autonomous Cloud SOC Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#0b0f19] text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
