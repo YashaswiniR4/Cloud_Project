@@ -9,8 +9,114 @@ from backend.database.models import (
 )
 
 
+from datetime import datetime, timedelta, timezone
+
+
+# --- Users ---
+def get_user_by_email(db: Session, email: str) -> Optional[User]:
+    return db.query(User).filter(User.email.ilike(email.strip())).first()
+
+
+def get_user_by_username(db: Session, username: str) -> Optional[User]:
+    return db.query(User).filter(User.username.ilike(username.strip())).first()
+
+
+def get_user_by_id(db: Session, user_id: str) -> Optional[User]:
+    return db.query(User).filter(User.id == user_id).first()
+
+
+def create_user(
+    db: Session,
+    username: str,
+    email: str,
+    password_hash: str,
+    role: str = "Security Analyst",
+    is_verified: bool = False,
+    verification_otp: Optional[str] = None,
+    otp_expires_at: Optional[datetime] = None
+) -> User:
+    db_user = User(
+        username=username.strip(),
+        email=email.strip().lower(),
+        password_hash=password_hash,
+        role=role,
+        is_verified=is_verified,
+        verification_otp=verification_otp,
+        otp_expires_at=otp_expires_at,
+        failed_login_attempts=0,
+        locked_until=None
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+def verify_user_otp(db: Session, user: User) -> User:
+    """Marks user as verified and clears single-use OTP fields."""
+    user.is_verified = True
+    user.verification_otp = None
+    user.otp_expires_at = None
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_user_otp(db: Session, user: User, otp_code: str, expires_at: datetime) -> User:
+    """Updates user verification OTP and 5-minute expiration timestamp."""
+    user.verification_otp = otp_code
+    user.otp_expires_at = expires_at
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+
+def is_account_locked(db: Session, user: User) -> bool:
+    """Checks if a user account is currently locked due to failed login attempts."""
+    if user.locked_until:
+        # Normalize timezone awareness
+        now_utc = datetime.now(timezone.utc)
+        locked_until_tz = user.locked_until
+        if locked_until_tz.tzinfo is None:
+            locked_until_tz = locked_until_tz.replace(tzinfo=timezone.utc)
+        
+        if locked_until_tz > now_utc:
+            return True
+        else:
+            # Lock duration has expired - auto unlock
+            user.failed_login_attempts = 0
+            user.locked_until = None
+            db.commit()
+            return False
+    return False
+
+
+def increment_failed_login(db: Session, user: User) -> bool:
+    """
+    Increments failed login counter. If it reaches 5, locks account for 15 minutes.
+    Returns True if account is now locked.
+    """
+    user.failed_login_attempts = getattr(user, 'failed_login_attempts', 0) + 1
+    if user.failed_login_attempts >= 5:
+        user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
+        db.commit()
+        return True
+    db.commit()
+    return False
+
+
+def reset_failed_login(db: Session, user: User):
+    """Resets failed login counter upon successful authentication."""
+    user.failed_login_attempts = 0
+    user.locked_until = None
+    db.commit()
+
+
+
 # --- Events ---
 def create_event(db: Session, event_data: Dict[str, Any]) -> Event:
+
     event_id = event_data.get("event_id", f"evt-{event_data.get('eventID', 'gen')}")
     existing = db.query(Event).filter(Event.event_id == event_id).first()
     if existing:

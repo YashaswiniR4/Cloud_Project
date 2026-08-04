@@ -183,8 +183,30 @@ curl http://localhost:8000/health
 
 ---
 
+## 🔐 Authentication System & Zero Trust Access Control
+
+The platform features an enterprise-grade **JWT Authentication & RBAC System** protecting all SOC dashboard endpoints and APIs:
+
+### 1. Key Authentication Features
+- **Bcrypt Password Hashing**: Passwords stored securely in PostgreSQL using salt-hashed bcrypt algorithm.
+- **Signed JWT Tokens**: Short-lived access tokens signed using HMAC SHA-256 (`HS256`) with configurable expiration (`ACCESS_TOKEN_EXPIRE_MINUTES`).
+- **Dependency Guard (`get_current_user`)**: Reusable FastAPI dependency ensuring unauthenticated requests receive `HTTP 401 Unauthorized`.
+- **Axios Request Interceptor**: Frontend automatically injects `Authorization: Bearer <token>` into all REST requests.
+- **Route Guarding (`ProtectedRoute`)**: React Router protects SOC telemetry pages and redirects unauthenticated users to `/login`.
+
+### 2. Authentication API Specification
+| Endpoint | Method | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `/auth/register` | `POST` | Public | Register new analyst with unique `username`, `email`, and `password`. |
+| `/auth/login` | `POST` | Public | Authenticate credentials and receive JWT `access_token`. |
+| `/auth/me` | `GET` | Protected | Retrieve profile details for current authenticated analyst. |
+| `/auth/logout` | `POST` | Protected | Logout analyst session and clear local token cache. |
+
+---
+
 ## 📜 Security Standards & Compliance
 
 - **NIST SP 800-207**: Zero Trust access control model enforced across API microservices.
 - **S3 WORM Audit Immutability**: Cryptographic SHA-256 integrity checks preventing log tampering.
-- **OWASP Top 10 API Security**: CORS middleware, Pydantic input validation, and structured exception handling.
+- **OWASP Top 10 API Security**: CORS middleware, Pydantic input validation, bcrypt password hashing, and JWT token protection.
+

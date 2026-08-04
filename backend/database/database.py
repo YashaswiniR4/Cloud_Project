@@ -48,5 +48,18 @@ def get_db():
 def init_db():
     """Creates all PostgreSQL / Supabase / SQLite database tables automatically if missing."""
     from backend.database import models  # noqa: F401
+    from sqlalchemy import text
     Base.metadata.create_all(bind=engine)
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0 NOT NULL;"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP WITH TIME ZONE;"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE NOT NULL;"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_otp VARCHAR(6);"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expires_at TIMESTAMP WITH TIME ZONE;"))
+            conn.commit()
+    except Exception as err:
+        logger.debug(f"Schema column check: {err}")
     logger.info("Database schema successfully created/verified on target database.")
+
+

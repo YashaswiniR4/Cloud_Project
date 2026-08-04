@@ -18,12 +18,20 @@ from backend.schemas.dashboard_schemas import (
 from backend.services.threat_service import threat_ops_service, ThreatOperationsService
 
 
+from backend.auth.security import get_current_user
+from backend.api.auth import auth_router
+from backend.database.models import User
+
+
 def get_threat_service() -> ThreatOperationsService:
     """Dependency Injection provider for Threat Operations Service."""
     return threat_ops_service
 
 
 api_router = APIRouter()
+
+# Include Authentication Router (/auth/register, /auth/login, /auth/me, /auth/logout)
+api_router.include_router(auth_router)
 
 
 @api_router.get("/health", response_model=HealthResponseSchema, summary="System Health Check")
@@ -45,7 +53,10 @@ def health_check(service: ThreatOperationsService = Depends(get_threat_service))
 
 
 @api_router.get("/logs", summary="Retrieve Ingested Security Logs")
-def get_logs(service: ThreatOperationsService = Depends(get_threat_service)):
+def get_logs(
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
     """Retrieves all normalized telemetry security events."""
     return {
         "total_logs": len(service.all_threat_logs),
@@ -54,7 +65,10 @@ def get_logs(service: ThreatOperationsService = Depends(get_threat_service)):
 
 
 @api_router.get("/alerts", summary="Retrieve Dispatched Security Alerts")
-def get_alerts(service: ThreatOperationsService = Depends(get_threat_service)):
+def get_alerts(
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
     """Retrieves all dispatched SNS/SOC alert notifications."""
     return {
         "total_alerts": len(service.dispatched_alerts),
@@ -63,7 +77,10 @@ def get_alerts(service: ThreatOperationsService = Depends(get_threat_service)):
 
 
 @api_router.get("/remediations", summary="Retrieve Automated Lambda Remediation Logs")
-def get_remediations(service: ThreatOperationsService = Depends(get_threat_service)):
+def get_remediations(
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
     """Retrieves all automated serverless incident response & remediation logs."""
     return {
         "total_remediations": len(service.remediation_handler.remediation_log),
@@ -72,7 +89,10 @@ def get_remediations(service: ThreatOperationsService = Depends(get_threat_servi
 
 
 @api_router.get("/threats", summary="Retrieve Active Threat Intel Feeds")
-def get_threats(service: ThreatOperationsService = Depends(get_threat_service)):
+def get_threats(
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
     """Retrieves detected security threats and high-risk events."""
     high_risk = [e for e in service.all_threat_logs if e.get("is_high_risk", False) or e.get("severity") == "HIGH" or e.get("threat_score", 0) > 70]
     return {
@@ -82,19 +102,29 @@ def get_threats(service: ThreatOperationsService = Depends(get_threat_service)):
 
 
 @api_router.get("/metrics", response_model=MetricsResponseSchema, summary="Retrieve Real-time System Metrics")
-def get_metrics(service: ThreatOperationsService = Depends(get_threat_service)):
+def get_metrics(
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
     """Calculates real-time SOC metrics and threat counts."""
     return service.get_metrics()
 
 
 @api_router.get("/dashboard", response_model=DashboardOverviewSchema, summary="Retrieve SOC Dashboard Overview")
-def get_dashboard(service: ThreatOperationsService = Depends(get_threat_service)):
+def get_dashboard(
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
     """Returns complete SOC dashboard telemetry payload."""
     return service.get_dashboard_summary()
 
 
 @api_router.post("/simulate/cloudtrail", status_code=status.HTTP_201_CREATED, summary="Simulate CloudTrail Log Batch Ingestion")
-def simulate_cloudtrail(payload: CloudTrailBatchPayloadSchema, service: ThreatOperationsService = Depends(get_threat_service)):
+def simulate_cloudtrail(
+    payload: CloudTrailBatchPayloadSchema,
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
     """Processes CloudTrail log batch, normalizes records, and runs ML threat analysis."""
     dict_payload = payload.model_dump()
     result = service.process_cloudtrail_batch(dict_payload)
@@ -107,7 +137,11 @@ def simulate_cloudtrail(payload: CloudTrailBatchPayloadSchema, service: ThreatOp
 
 
 @api_router.post("/simulate/ssh-attack", summary="Simulate SSH Honeypot Brute Force Attempt")
-def simulate_ssh_attack(payload: SSHSimulationSchema, service: ThreatOperationsService = Depends(get_threat_service)):
+def simulate_ssh_attack(
+    payload: SSHSimulationSchema,
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
     """Simulates an SSH brute-force attack against Cowrie honeypot trap."""
     telemetry = service.simulate_ssh_attack(payload.source_ip, payload.username, payload.password)
     return {
@@ -117,10 +151,15 @@ def simulate_ssh_attack(payload: SSHSimulationSchema, service: ThreatOperationsS
 
 
 @api_router.post("/simulate/http-attack", summary="Simulate HTTP Honeypot Exploit Request")
-def simulate_http_attack(payload: HTTPSimulationSchema, service: ThreatOperationsService = Depends(get_threat_service)):
+def simulate_http_attack(
+    payload: HTTPSimulationSchema,
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
     """Simulates a web application exploit probe against HTTP honeypot trap."""
     result = service.simulate_http_attack(payload.source_ip, payload.path, payload.method, payload.payload)
     return {
         "status": "CAPTURED",
         "result": result
     }
+

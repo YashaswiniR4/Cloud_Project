@@ -9,6 +9,59 @@ const api = axios.create({
   },
 });
 
+// Request Interceptor: Automatically attach JWT Bearer token to all requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token') || 
+                  sessionStorage.getItem('token') || 
+                  localStorage.getItem('access_token') || 
+                  sessionStorage.getItem('access_token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+
+// --- Authentication APIs ---
+export const registerUser = async (userData) => {
+  const response = await api.post('/auth/register', userData);
+  return response.data;
+};
+
+export const loginUser = async (credentials) => {
+  const response = await api.post('/auth/login', credentials);
+  return response.data;
+};
+
+export const verifyEmail = async (data) => {
+  const response = await api.post('/auth/verify-email', data);
+  return response.data;
+};
+
+export const resendOTP = async (data) => {
+  const response = await api.post('/auth/resend-otp', data);
+  return response.data;
+};
+
+export const getCurrentUser = async () => {
+  const response = await api.get('/auth/me');
+  return response.data;
+};
+
+export const logoutUser = async () => {
+
+  try {
+    const response = await api.post('/auth/logout');
+    return response.data;
+  } catch (err) {
+    return { message: 'Logged out' };
+  }
+};
+
+
 export const getHealthStatus = async () => {
   const response = await api.get('/health');
   return response.data;

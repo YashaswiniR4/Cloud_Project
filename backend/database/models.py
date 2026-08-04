@@ -26,8 +26,15 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    role = Column(String(20), default="ANALYST", nullable=False)
+    role = Column(String(50), default="Security Analyst", nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    verification_otp = Column(String(6), nullable=True)
+    otp_expires_at = Column(DateTime(timezone=True), nullable=True)
+    failed_login_attempts = Column(Integer, default=0, nullable=False)
+    locked_until = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=current_utc_time, nullable=False)
+
+
 
 
 class Event(Base):
