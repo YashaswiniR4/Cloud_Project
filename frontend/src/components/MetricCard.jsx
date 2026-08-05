@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const MetricCard = ({ title, value, icon: Icon, color = 'blue', change, subtitle }) => {
+export const MetricCard = ({ title, value, icon: Icon, color = 'blue', subtitle, onClick }) => {
   const colorMap = {
     blue: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
     red: 'text-red-400 bg-red-500/10 border-red-500/20',
@@ -11,7 +11,12 @@ export const MetricCard = ({ title, value, icon: Icon, color = 'blue', change, s
   };
 
   return (
-    <div className="glass-panel p-5 rounded-xl border border-slate-800 relative overflow-hidden group hover:border-slate-700 transition-all duration-300">
+    <div 
+      onClick={onClick}
+      className={`glass-panel p-5 rounded-xl border border-slate-800 relative overflow-hidden group transition-all duration-300 ${
+        onClick ? 'cursor-pointer hover:border-slate-600 hover:scale-[1.01] hover:shadow-lg hover:shadow-blue-500/5' : ''
+      }`}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">{title}</p>
@@ -20,7 +25,7 @@ export const MetricCard = ({ title, value, icon: Icon, color = 'blue', change, s
           </h3>
           {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
         </div>
-        <div className={`p-3 rounded-lg border ${colorMap[color] || colorMap.blue}`}>
+        <div className={`p-3 rounded-lg border ${colorMap[color] || colorMap.blue} group-hover:scale-110 transition-transform duration-300`}>
           <Icon className="w-6 h-6" />
         </div>
       </div>

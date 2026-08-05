@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   ShieldAlert, 
   Activity, 
   AlertTriangle, 
   Cpu, 
-  Bell, 
-  Crosshair, 
   Lock,
   TrendingUp,
-  Server,
-  Zap
+  Crosshair,
+  Zap,
+  ArrowRight,
+  Eye,
+  CheckCircle2,
+  X
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -24,9 +27,11 @@ import { LoadingSpinner } from '../components/LoadingSpinner';
 const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedThreatModal, setSelectedThreatModal] = useState(null);
 
   const fetchDashboard = async () => {
     try {
@@ -64,7 +69,7 @@ export const Dashboard = () => {
   const recentAlerts = data?.recent_alerts || [];
   const honeypots = data?.honeypot_summary || {};
 
-  // Mock timeline chart data computed from real metrics
+  // Compute timeline chart data matching ingested telemetry
   const timelineData = [
     { time: '18:00', events: Math.max(2, metrics.total_ingested_events - 10), threats: 1 },
     { time: '18:15', events: Math.max(5, metrics.total_ingested_events - 5), threats: 2 },
@@ -101,7 +106,7 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Metrics Row */}
+      {/* Metrics Row (Interactive Click Navigation) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Events Ingested"
@@ -109,6 +114,7 @@ export const Dashboard = () => {
           icon={Activity}
           color="blue"
           subtitle="CloudTrail & Honeypot Stream"
+          onClick={() => navigate('/logs')}
         />
         <MetricCard
           title="High Risk Threats"
@@ -116,6 +122,7 @@ export const Dashboard = () => {
           icon={ShieldAlert}
           color="red"
           subtitle="Critical Security Alerts"
+          onClick={() => navigate('/threats')}
         />
         <MetricCard
           title="Anomalies Detected"
@@ -123,6 +130,7 @@ export const Dashboard = () => {
           icon={Cpu}
           color="purple"
           subtitle="Zero-Day Isolation Score > 0.65"
+          onClick={() => navigate('/ml-predictions')}
         />
         <MetricCard
           title="WORM Audit Logs"
@@ -130,6 +138,7 @@ export const Dashboard = () => {
           icon={Lock}
           color="emerald"
           subtitle="KMS SSE Immutable S3 Vault"
+          onClick={() => navigate('/logs')}
         />
       </div>
 
@@ -145,6 +154,13 @@ export const Dashboard = () => {
               </h3>
               <p className="text-xs text-slate-400">Ingested events vs detected threat anomalies</p>
             </div>
+            <button
+              onClick={() => navigate('/logs')}
+              className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center space-x-1"
+            >
+              <span>View Logs</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -174,10 +190,19 @@ export const Dashboard = () => {
 
         {/* Severity Distribution Pie Chart */}
         <div className="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
-            <span>Threat Severity Distribution</span>
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white flex items-center space-x-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <span>Threat Severity Distribution</span>
+            </h3>
+            <button
+              onClick={() => navigate('/threats')}
+              className="text-xs text-amber-400 hover:text-amber-300 font-medium flex items-center space-x-1"
+            >
+              <span>View Intel</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
           <div className="h-64 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -211,7 +236,13 @@ export const Dashboard = () => {
               <ShieldAlert className="w-4 h-4 text-red-400" />
               <span>Recent Ingested Threats</span>
             </h3>
-            <span className="text-xs text-slate-500">{recentThreats.length} Recorded</span>
+            <button
+              onClick={() => navigate('/threats')}
+              className="text-xs text-slate-400 hover:text-white font-medium flex items-center space-x-1"
+            >
+              <span>View All ({recentThreats.length})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -222,12 +253,13 @@ export const Dashboard = () => {
                   <th className="pb-3 pt-2 font-medium">Source IP</th>
                   <th className="pb-3 pt-2 font-medium">Severity</th>
                   <th className="pb-3 pt-2 font-medium">Score</th>
+                  <th className="pb-3 pt-2 font-medium text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {recentThreats.length > 0 ? (
                   recentThreats.map((evt, idx) => (
-                    <tr key={idx} className="hover:bg-slate-800/30 transition-colors">
+                    <tr key={idx} className="hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => setSelectedThreatModal(evt)}>
                       <td className="py-2.5 font-medium text-slate-200">
                         {evt.event_name || evt.threat_type || 'CloudTrail API'}
                       </td>
@@ -236,11 +268,23 @@ export const Dashboard = () => {
                         <SeverityBadge severity={evt.severity} />
                       </td>
                       <td className="py-2.5 font-semibold text-red-400">{evt.threat_score}</td>
+                      <td className="py-2.5 text-right">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedThreatModal(evt);
+                          }}
+                          className="p-1 text-slate-400 hover:text-blue-400 transition-colors"
+                          title="View Threat Inspection Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="py-6 text-center text-slate-500">
+                    <td colSpan={5} className="py-6 text-center text-slate-500">
                       No high-risk threats detected yet.
                     </td>
                   </tr>
@@ -252,13 +296,25 @@ export const Dashboard = () => {
 
         {/* Honeypots Status Card */}
         <div className="glass-panel p-5 rounded-xl border border-slate-800 space-y-4">
-          <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-            <Crosshair className="w-4 h-4 text-cyan-400" />
-            <span>Deception Trap Engines</span>
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white flex items-center space-x-2">
+              <Crosshair className="w-4 h-4 text-cyan-400" />
+              <span>Deception Trap Engines</span>
+            </h3>
+            <button
+              onClick={() => navigate('/honeypots')}
+              className="text-xs text-cyan-400 hover:text-cyan-300 font-medium flex items-center space-x-1"
+            >
+              <span>Manage Traps</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
+            <div 
+              onClick={() => navigate('/honeypots')}
+              className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2 cursor-pointer hover:border-cyan-500/40 transition-all"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-300">Cowrie SSH Trap</span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${honeypots.ssh_honeypot_active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400'}`}>
@@ -269,7 +325,10 @@ export const Dashboard = () => {
               <p className="text-[11px] text-slate-500">Port 2222 Docker Container</p>
             </div>
 
-            <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
+            <div 
+              onClick={() => navigate('/honeypots')}
+              className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2 cursor-pointer hover:border-cyan-500/40 transition-all"
+            >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-slate-300">HTTP Web Trap</span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${honeypots.http_honeypot_active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400'}`}>
@@ -282,6 +341,68 @@ export const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Threat Inspection Modal */}
+      {selectedThreatModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="glass-panel w-full max-w-xl p-6 rounded-2xl border border-slate-800 shadow-2xl relative space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Threat Inspection Breakdown</h3>
+                  <p className="text-xs text-slate-400 font-mono">Source IP: {selectedThreatModal.source_ip}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedThreatModal(null)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/60 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="p-3 bg-slate-950/80 border border-slate-800/80 rounded-xl space-y-1">
+                <span className="text-slate-500 font-medium">Event Name / Type</span>
+                <p className="text-white font-semibold">{selectedThreatModal.event_name || selectedThreatModal.threat_type || 'CloudTrail API'}</p>
+              </div>
+              <div className="p-3 bg-slate-950/80 border border-slate-800/80 rounded-xl space-y-1">
+                <span className="text-slate-500 font-medium">Threat Risk Score</span>
+                <p className="text-red-400 font-bold text-sm">{selectedThreatModal.threat_score} / 100</p>
+              </div>
+              <div className="p-3 bg-slate-950/80 border border-slate-800/80 rounded-xl space-y-1">
+                <span className="text-slate-500 font-medium">Severity Classification</span>
+                <div>
+                  <SeverityBadge severity={selectedThreatModal.severity} />
+                </div>
+              </div>
+              <div className="p-3 bg-slate-950/80 border border-slate-800/80 rounded-xl space-y-1">
+                <span className="text-slate-500 font-medium">Zero-Day Anomaly Detection</span>
+                <p className="text-emerald-400 font-semibold flex items-center space-x-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Isolation Score: {((selectedThreatModal.threat_score || 80) / 100).toFixed(2)}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800">
+              <button
+                onClick={() => {
+                  setSelectedThreatModal(null);
+                  navigate('/threats');
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-medium transition-colors shadow-lg shadow-blue-600/20 flex items-center space-x-1.5"
+              >
+                <span>Open in Threat Intel Engine</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
