@@ -1,5 +1,5 @@
 """
-FastAPI Authentication Endpoints (/auth/register, /auth/login, /auth/me, /auth/logout)
+FastAPI Authentication Endpoints (/auth/register, /auth/login, /auth/me, /auth/logout, /auth/verify-email, /auth/resend-otp)
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -43,7 +43,7 @@ def register(payload: UserRegisterSchema, db: Session = Depends(get_db)):
     """
     Register a new user analyst account.
     Validates email format, username policy, password complexity, and uniqueness.
-    Generates a 6-digit OTP verification code valid for 5 minutes.
+    Generates a 6-digit OTP verification code valid for 5 minutes and dispatches real email via SMTP.
     """
     # Validate policies
     clean_username = validate_username_policy(payload.username)
@@ -73,6 +73,14 @@ def register(payload: UserRegisterSchema, db: Session = Depends(get_db)):
     otp_code = generate_otp_code()
     otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
 
+    # Send verification email via SMTP first
+    email_result = send_verification_otp_email(clean_email, otp_code)
+    if not email_result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Registration failed: Could not deliver verification email. Details: {email_result['error']}"
+        )
+
     # Store unverified user in database
     new_user = crud.create_user(
         db=db,
@@ -84,9 +92,6 @@ def register(payload: UserRegisterSchema, db: Session = Depends(get_db)):
         verification_otp=otp_code,
         otp_expires_at=otp_expires_at
     )
-
-    # Send verification email via SMTP or console logger
-    send_verification_otp_email(clean_email, otp_code)
 
     return {
         "message": "Registration successful. A 6-digit verification code has been sent to your email.",
@@ -155,8 +160,14 @@ def resend_otp(payload: ResendOTPSchema, db: Session = Depends(get_db)):
     new_otp = generate_otp_code()
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
 
+    email_result = send_verification_otp_email(user.email, new_otp)
+    if not email_result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to resend verification OTP email. Details: {email_result['error']}"
+        )
+
     crud.update_user_otp(db, user, new_otp, expires_at)
-    send_verification_otp_email(user.email, new_otp)
 
     return {"message": "A new verification code has been sent to your email."}
 
@@ -170,7 +181,6 @@ def login(payload: UserLoginSchema, db: Session = Depends(get_db)):
     clean_email = payload.email.strip().lower()
     user = crud.get_user_by_email(db, clean_email)
     if not user:
-        # Generic error message without revealing whether email exists
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password.",
@@ -222,8 +232,6 @@ def login(payload: UserLoginSchema, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "user": UserResponseSchema.model_validate(user)
     }
-
-
 
 
 @auth_router.get("/me", response_model=UserResponseSchema, summary="Get Current Authenticated User")
