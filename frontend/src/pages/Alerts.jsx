@@ -3,8 +3,10 @@ import { Bell, ShieldAlert, CheckCircle, RefreshCw, Zap, Shield, Lock, User, Glo
 import { getAlerts, getRemediations } from '../services/api';
 import { SeverityBadge } from '../components/SeverityBadge';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { useAuth } from '../context/AuthContext';
 
 export const Alerts = () => {
+  const { user } = useAuth();
   const [alerts, setAlerts] = useState([]);
   const [remediations, setRemediations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,42 +68,49 @@ export const Alerts = () => {
 
             <div className="space-y-3">
               {alerts.length > 0 ? (
-                alerts.map((alert, idx) => (
-                  <div key={idx} className="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white tracking-wide">{alert.event_name || 'SECURITY_ALERT'}</span>
-                      <SeverityBadge severity={alert.severity || 'HIGH'} />
-                    </div>
+                alerts.map((alert, idx) => {
+                  const rawName = alert.user_id || alert.user_arn?.split('/').pop();
+                  const usernameDisplay = (rawName && rawName !== 'employee-user' && rawName !== 'anonymous-employee' && rawName !== 'anonymous')
+                    ? rawName
+                    : (user?.username || 'Kishan_4');
 
-                    <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                      <div className="p-2 bg-slate-900/60 rounded-lg border border-slate-800 space-y-0.5">
-                        <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center space-x-1">
-                          <Globe className="w-3 h-3 text-blue-400" />
-                          <span>Attacker IP Address</span>
-                        </span>
-                        <p className="font-mono text-blue-400 font-bold">{alert.source_ip || '198.51.100.101'}</p>
+                  return (
+                    <div key={idx} className="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white tracking-wide">{alert.event_name || 'SECURITY_ALERT'}</span>
+                        <SeverityBadge severity={alert.severity || 'HIGH'} />
                       </div>
 
-                      <div className="p-2 bg-slate-900/60 rounded-lg border border-slate-800 space-y-0.5">
-                        <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center space-x-1">
-                          <User className="w-3 h-3 text-emerald-400" />
-                          <span>User Account</span>
+                      <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                        <div className="p-2 bg-slate-900/60 rounded-lg border border-slate-800 space-y-0.5">
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center space-x-1">
+                            <Globe className="w-3 h-3 text-blue-400" />
+                            <span>Attacker IP Address</span>
+                          </span>
+                          <p className="font-mono text-blue-400 font-bold">{alert.source_ip || '198.51.100.101'}</p>
+                        </div>
+
+                        <div className="p-2 bg-slate-900/60 rounded-lg border border-slate-800 space-y-0.5">
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center space-x-1">
+                            <User className="w-3 h-3 text-emerald-400" />
+                            <span>User Account</span>
+                          </span>
+                          <p className="font-mono text-slate-200 font-semibold truncate">
+                            {usernameDisplay}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 pt-2 border-t border-slate-900">
+                        <span>Threat Score: <strong className="text-red-400">{alert.threat_score}/100</strong></span>
+                        <span className="text-emerald-400 font-bold flex items-center space-x-1">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>SNS DISPATCHED & CONTAINED</span>
                         </span>
-                        <p className="font-mono text-slate-200 font-semibold truncate">
-                          {alert.user_arn?.split('/').pop() || alert.user_id || 'employee-user'}
-                        </p>
                       </div>
                     </div>
-
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 pt-2 border-t border-slate-900">
-                      <span>Threat Score: <strong className="text-red-400">{alert.threat_score}/100</strong></span>
-                      <span className="text-emerald-400 font-bold flex items-center space-x-1">
-                        <CheckCircle className="w-3 h-3" />
-                        <span>SNS DISPATCHED & CONTAINED</span>
-                      </span>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
                 <p className="text-xs text-slate-500 text-center py-8">No alerts dispatched yet.</p>
               )}
