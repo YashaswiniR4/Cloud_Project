@@ -3,10 +3,8 @@ import { Bell, ShieldAlert, CheckCircle, RefreshCw, Zap, Shield, Lock, User, Glo
 import { getAlerts, getRemediations } from '../services/api';
 import { SeverityBadge } from '../components/SeverityBadge';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { useAuth } from '../context/AuthContext';
 
 export const Alerts = () => {
-  const { user } = useAuth();
   const [alerts, setAlerts] = useState([]);
   const [remediations, setRemediations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +70,7 @@ export const Alerts = () => {
                   const rawName = alert.user_id || alert.user_arn?.split('/').pop();
                   const usernameDisplay = (rawName && rawName !== 'employee-user' && rawName !== 'anonymous-employee' && rawName !== 'anonymous')
                     ? rawName
-                    : (user?.username || 'Kishan_4');
+                    : 'Attacker_User';
 
                   return (
                     <div key={idx} className="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-3">

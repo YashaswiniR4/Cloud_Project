@@ -72,7 +72,7 @@ class ThreatOperationsService:
                     "eventTime": datetime.now(timezone.utc).isoformat(),
                     "eventSource": "iam.amazonaws.com",
                     "sourceIPAddress": "198.51.100.45",
-                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/Kishan_4"}
+                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/Attacker_Admin_Probe"}
                 },
                 {
                     "eventID": f"ct-init-{uuid.uuid4().hex[:8]}",
@@ -80,12 +80,12 @@ class ThreatOperationsService:
                     "eventTime": datetime.now(timezone.utc).isoformat(),
                     "eventSource": "ec2.amazonaws.com",
                     "sourceIPAddress": "203.0.113.99",
-                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/Sourabh_4"}
+                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/External_Attacker_99"}
                 }
             ]
         }
         self.process_cloudtrail_batch(sample_batch)
-        self.simulate_ssh_attack("198.51.100.99", "root", "toor")
+        self.simulate_ssh_attack("198.51.100.99", "root_attacker", "toor")
         self.simulate_http_attack("203.0.113.88", "/admin", "POST", payload="' OR '1'='1")
 
     def log_portal_activity(
@@ -105,7 +105,7 @@ class ThreatOperationsService:
         """
         db = SessionLocal()
         try:
-            effective_user_id = user_id or "Kishan_4"
+            effective_user_id = user_id or "Attacker_User"
 
             # 1. Evaluate User Behavior Analytics (UBA)
             uba_result = evaluate_user_behavior(
@@ -226,8 +226,8 @@ class ThreatOperationsService:
 
                 if event.get("is_high_risk", False) or anomaly.get("is_zero_day_anomaly", False):
                     high_risk_count += 1
-                    user_arn = event.get("user_arn", "arn:aws:iam::123456789012:user/Kishan_4")
-                    user_id = user_arn.split("/")[-1] if "/" in user_arn else "Kishan_4"
+                    user_arn = event.get("user_arn", "arn:aws:iam::123456789012:user/Attacker_User")
+                    user_id = user_arn.split("/")[-1] if "/" in user_arn else "Attacker_User"
 
                     alert = self.alert_dispatcher.dispatch_alert({
                         "severity": event["severity"],
@@ -253,7 +253,7 @@ class ThreatOperationsService:
             return {
                 "processed_count": len(parsed_events),
                 "high_risk_count": high_risk_count,
-                "events": parsed_events
+                "events": result if 'result' in locals() else result if 'result' in locals() else result if 'result' in locals() else result if 'result' in locals() else parsed_events
             }
         finally:
             db.close()
@@ -319,8 +319,8 @@ class ThreatOperationsService:
             telemetry["threat_intel"] = reputation
             telemetry["severity"] = "HIGH" if telemetry["threat_score"] > 70.0 else "MEDIUM"
             telemetry["event_name"] = telemetry["threat_type"]
-            telemetry["user_id"] = "Sourabh_4"
-            telemetry["user_arn"] = "arn:aws:iam::123456789012:user/Sourabh_4"
+            telemetry["user_id"] = "web_exploit_attacker"
+            telemetry["user_arn"] = "arn:aws:iam::123456789012:user/web_exploit_attacker"
 
             self.all_threat_logs.append(telemetry)
 
@@ -338,8 +338,8 @@ class ThreatOperationsService:
                     "source_ip": source_ip,
                     "event_name": telemetry["threat_type"],
                     "threat_score": telemetry["threat_score"],
-                    "user_id": "Sourabh_4",
-                    "user_arn": "arn:aws:iam::123456789012:user/Sourabh_4"
+                    "user_id": "web_exploit_attacker",
+                    "user_arn": "arn:aws:iam::123456789012:user/web_exploit_attacker"
                 })
                 crud.create_alert(db, alert)
                 self.dispatched_alerts.append(alert)
