@@ -72,7 +72,7 @@ class ThreatOperationsService:
                     "eventTime": datetime.now(timezone.utc).isoformat(),
                     "eventSource": "iam.amazonaws.com",
                     "sourceIPAddress": "198.51.100.45",
-                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/attacker"}
+                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/Kishan_4"}
                 },
                 {
                     "eventID": f"ct-init-{uuid.uuid4().hex[:8]}",
@@ -80,7 +80,7 @@ class ThreatOperationsService:
                     "eventTime": datetime.now(timezone.utc).isoformat(),
                     "eventSource": "ec2.amazonaws.com",
                     "sourceIPAddress": "203.0.113.99",
-                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/admin"}
+                    "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/Sourabh_4"}
                 }
             ]
         }
@@ -105,10 +105,12 @@ class ThreatOperationsService:
         """
         db = SessionLocal()
         try:
+            effective_user_id = user_id or "Kishan_4"
+
             # 1. Evaluate User Behavior Analytics (UBA)
             uba_result = evaluate_user_behavior(
                 db=db,
-                user_id=user_id or "anonymous-employee",
+                user_id=effective_user_id,
                 source_ip=source_ip,
                 country=country,
                 city=city,
@@ -133,7 +135,8 @@ class ThreatOperationsService:
                 "event_time": datetime.now(timezone.utc).isoformat(),
                 "event_source": "corporate.employee.portal",
                 "source_ip": source_ip,
-                "user_arn": user_arn or f"arn:aws:iam::123456789012:user/{user_id or 'employee'}",
+                "user_id": effective_user_id,
+                "user_arn": user_arn or f"arn:aws:iam::123456789012:user/{effective_user_id}",
                 "threat_score": total_threat_score,
                 "severity": severity,
                 "is_high_risk": total_threat_score >= 70.0,
@@ -156,14 +159,16 @@ class ThreatOperationsService:
                     "severity": severity,
                     "source_ip": source_ip,
                     "event_name": event_name,
-                    "threat_score": total_threat_score
+                    "threat_score": total_threat_score,
+                    "user_id": effective_user_id,
+                    "user_arn": event_dict["user_arn"]
                 })
                 crud.create_alert(db, alert)
                 self.dispatched_alerts.append(alert)
 
                 # Create Incident Timeline Entry
                 timeline_steps = [
-                    {"step": 1, "title": "Employee Portal Action", "desc": f"User attempted {event_name}", "timestamp": datetime.now(timezone.utc).isoformat()},
+                    {"step": 1, "title": "Employee Portal Action", "desc": f"User {effective_user_id} attempted {event_name}", "timestamp": datetime.now(timezone.utc).isoformat()},
                     {"step": 2, "title": "UBA Anomaly Detection", "desc": f"UBA Boost +{uba_result['anomaly_boost']} | {uba_result['reasons']}", "timestamp": datetime.now(timezone.utc).isoformat()},
                     {"step": 3, "title": "ML Threat Classification", "desc": f"Assigned Threat Score: {total_threat_score}/100 ({severity})", "timestamp": datetime.now(timezone.utc).isoformat()},
                     {"step": 4, "title": "Lambda Remediation Executed", "desc": f"Automated Security Group IP Containment for {source_ip}", "timestamp": datetime.now(timezone.utc).isoformat()},
@@ -172,7 +177,7 @@ class ThreatOperationsService:
 
                 timeline = IncidentTimeline(
                     incident_id=f"INC-{int(datetime.now().timestamp())}-{uuid.uuid4().hex[:4]}",
-                    title=f"Security Incident: {event_name} from {source_ip}",
+                    title=f"Security Incident: {event_name} by {effective_user_id} from {source_ip}",
                     severity=severity,
                     status="OPEN",
                     source_ip=source_ip,
@@ -221,11 +226,16 @@ class ThreatOperationsService:
 
                 if event.get("is_high_risk", False) or anomaly.get("is_zero_day_anomaly", False):
                     high_risk_count += 1
+                    user_arn = event.get("user_arn", "arn:aws:iam::123456789012:user/Kishan_4")
+                    user_id = user_arn.split("/")[-1] if "/" in user_arn else "Kishan_4"
+
                     alert = self.alert_dispatcher.dispatch_alert({
                         "severity": event["severity"],
                         "source_ip": event["source_ip"],
                         "event_name": event["event_name"],
-                        "threat_score": event["threat_score"]
+                        "threat_score": event["threat_score"],
+                        "user_id": user_id,
+                        "user_arn": user_arn
                     })
                     crud.create_alert(db, alert)
                     self.dispatched_alerts.append(alert)
@@ -260,6 +270,8 @@ class ThreatOperationsService:
             telemetry["threat_intel"] = reputation
             telemetry["severity"] = "HIGH"
             telemetry["event_name"] = "SSH_BRUTE_FORCE"
+            telemetry["user_id"] = username
+            telemetry["user_arn"] = f"arn:aws:iam::123456789012:user/{username}"
 
             self.all_threat_logs.append(telemetry)
 
@@ -275,7 +287,9 @@ class ThreatOperationsService:
                 "severity": "HIGH",
                 "source_ip": source_ip,
                 "event_name": "SSH_BRUTE_FORCE",
-                "threat_score": telemetry["threat_score"]
+                "threat_score": telemetry["threat_score"],
+                "user_id": username,
+                "user_arn": telemetry["user_arn"]
             })
             crud.create_alert(db, alert)
             self.dispatched_alerts.append(alert)
@@ -305,6 +319,8 @@ class ThreatOperationsService:
             telemetry["threat_intel"] = reputation
             telemetry["severity"] = "HIGH" if telemetry["threat_score"] > 70.0 else "MEDIUM"
             telemetry["event_name"] = telemetry["threat_type"]
+            telemetry["user_id"] = "Sourabh_4"
+            telemetry["user_arn"] = "arn:aws:iam::123456789012:user/Sourabh_4"
 
             self.all_threat_logs.append(telemetry)
 
@@ -321,7 +337,9 @@ class ThreatOperationsService:
                     "severity": telemetry["severity"],
                     "source_ip": source_ip,
                     "event_name": telemetry["threat_type"],
-                    "threat_score": telemetry["threat_score"]
+                    "threat_score": telemetry["threat_score"],
+                    "user_id": "Sourabh_4",
+                    "user_arn": "arn:aws:iam::123456789012:user/Sourabh_4"
                 })
                 crud.create_alert(db, alert)
                 self.dispatched_alerts.append(alert)
