@@ -1,21 +1,22 @@
 import React from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
-import { Building2, Shield, User, LogOut, Lock, FileText, ArrowRight } from 'lucide-react';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Building2, User, LogOut, FileText, Home, LayoutDashboard, Bell, Settings, History } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const PublicPortalLayout = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
-    navigate('/portal/login');
+    navigate('/login');
   };
 
   return (
     <div className="min-h-screen bg-[#070a11] text-slate-100 flex flex-col font-sans">
-      {/* Top Header Bar */}
-      <header className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+      {/* Top Corporate Header Bar */}
+      <header className="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/portal" className="flex items-center space-x-3 group">
             <div className="p-2 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30 group-hover:bg-blue-600/30 transition-colors">
@@ -23,28 +24,62 @@ export const PublicPortalLayout = () => {
             </div>
             <div>
               <span className="font-bold text-white tracking-wide text-base block">GLOBEX CORP</span>
-              <span className="text-[10px] text-slate-400 font-mono tracking-wider block uppercase">Enterprise Employee Portal</span>
+              <span className="text-[10px] text-slate-400 font-mono tracking-wider block uppercase">Employee Enterprise Workspace</span>
             </div>
           </Link>
 
           <nav className="flex items-center space-x-6">
-            <Link to="/portal" className="text-xs font-medium text-slate-300 hover:text-white transition-colors">
-              Home
-            </Link>
-            {isAuthenticated && (
-              <Link to="/portal/dashboard" className="text-xs font-medium text-slate-300 hover:text-white transition-colors">
-                Employee Dashboard
-              </Link>
-            )}
-            
-            {/* Direct Switcher to SOC Command Center */}
             <Link 
-              to="/dashboard" 
-              className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 rounded-lg text-xs font-semibold text-blue-400 flex items-center space-x-1.5 transition-all shadow-sm shadow-blue-500/10"
+              to="/portal" 
+              className={`text-xs font-medium transition-colors flex items-center space-x-1.5 ${location.pathname === '/portal' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}
             >
-              <Shield className="w-3.5 h-3.5" />
-              <span>SOC Command Center</span>
+              <Home className="w-3.5 h-3.5" />
+              <span>Home</span>
             </Link>
+
+            {isAuthenticated && (
+              <>
+                <Link 
+                  to="/portal/dashboard" 
+                  className={`text-xs font-medium transition-colors flex items-center space-x-1.5 ${location.pathname === '/portal/dashboard' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span>Dashboard</span>
+                </Link>
+
+                <Link 
+                  to="/portal/dashboard?tab=documents" 
+                  className="text-xs font-medium text-slate-300 hover:text-white transition-colors flex items-center space-x-1.5"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Documents</span>
+                </Link>
+
+                <Link 
+                  to="/portal/dashboard?tab=notifications" 
+                  className="text-xs font-medium text-slate-300 hover:text-white transition-colors flex items-center space-x-1.5"
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  <span>Notifications</span>
+                </Link>
+
+                <Link 
+                  to="/portal/dashboard?tab=activity" 
+                  className="text-xs font-medium text-slate-300 hover:text-white transition-colors flex items-center space-x-1.5"
+                >
+                  <History className="w-3.5 h-3.5" />
+                  <span>Activity History</span>
+                </Link>
+
+                <Link 
+                  to="/portal/dashboard?tab=settings" 
+                  className="text-xs font-medium text-slate-300 hover:text-white transition-colors flex items-center space-x-1.5"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Settings</span>
+                </Link>
+              </>
+            )}
 
             {isAuthenticated ? (
               <div className="flex items-center space-x-3 border-l border-slate-800 pl-4">
@@ -59,10 +94,11 @@ export const PublicPortalLayout = () => {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-900 transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-900 transition-colors flex items-center space-x-1 text-xs"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
+                  <span className="hidden md:inline">Logout</span>
                 </button>
               </div>
             ) : (
@@ -85,20 +121,17 @@ export const PublicPortalLayout = () => {
         </div>
       </header>
 
-      {/* Main Content Body */}
+      {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Outlet />
       </main>
 
-      {/* Footer */}
+      {/* Corporate Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950/60 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p>© 2026 Globex Enterprise Portal. Protected by AI-Driven Autonomous Cloud Security Operations Center.</p>
+          <p>© 2026 Globex Corporation. Confidential Employee Workspace.</p>
           <div className="flex items-center space-x-4">
-            <span className="inline-flex items-center text-[11px] text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-              <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping mr-1.5"></span>
-              SOC Live Telemetry Pipeline Active
-            </span>
+            <span className="text-[11px] text-slate-400">Version 2.4.0 (Enterprise Build)</span>
           </div>
         </div>
       </footer>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -29,20 +29,23 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Default Root Redirect to Employee Portal */}
+          <Route path="/" element={<Navigate to="/portal" replace />} />
+
           {/* Public Authentication Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
 
-          {/* Corporate Employee Portal Routes */}
+          {/* Corporate Employee Portal Routes (Independent Interface) */}
           <Route path="/portal" element={<PublicPortalLayout />}>
             <Route index element={<PortalLanding />} />
             <Route path="dashboard" element={<PortalDashboard />} />
           </Route>
 
-          {/* Protected SOC Command Center Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<DashboardLayout />}>
+          {/* Restricted SOC Command Center Routes (Security Analyst & Admin Roles ONLY) */}
+          <Route element={<ProtectedRoute allowedRoles={['Security Analyst', 'Admin']} />}>
+            <Route path="/dashboard" element={<DashboardLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="logs" element={<CloudTrailLogs />} />
               <Route path="threats" element={<ThreatIntel />} />

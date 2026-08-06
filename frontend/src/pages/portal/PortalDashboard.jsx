@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
-  User, Mail, Shield, Key, UploadCloud, FileText, CheckCircle2, 
-  AlertCircle, Loader2, Clock, MapPin, Laptop, Lock, ShieldAlert
+  User, Mail, Key, UploadCloud, FileText, CheckCircle2, 
+  AlertCircle, Loader2, Clock, MapPin, Laptop, Bell, Settings, Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { logPortalActivity, uploadPortalDocument } from '../../services/api';
 
 export const PortalDashboard = () => {
   const { user } = useAuth();
+  const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState('overview'); // overview, upload, password, activity
+  // Tab State: overview, profile, documents, notifications, activity, settings
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get('tab') || 'overview';
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState(null);
@@ -20,15 +26,27 @@ export const PortalDashboard = () => {
   const [pwdMessage, setPwdMessage] = useState(null);
   const [pwdError, setPwdError] = useState(null);
 
+  const [notifications] = useState([
+    { id: 1, title: 'Welcome to Globex Workspace', desc: 'Your employee profile is active and verified.', time: 'Today 09:00' },
+    { id: 2, title: 'System Maintenance Scheduled', desc: 'Routine cloud server optimization tonight at 23:00 UTC.', time: 'Yesterday' },
+  ]);
+
   const [activities, setActivities] = useState([
-    { id: 1, event: 'EMPLOYEE_LOGIN', ip: '198.51.100.101', country: 'India', time: 'Just Now', status: 'SUCCESS' },
-    { id: 2, event: 'DOCUMENT_UPLOAD', ip: '198.51.100.101', country: 'India', time: '1 hour ago', status: 'CLEAN' },
-    { id: 3, event: 'PROFILE_UPDATE', ip: '198.51.100.101', country: 'India', time: 'Yesterday', status: 'SUCCESS' },
+    { id: 1, event: 'Employee Login', ip: '198.51.100.101', location: 'Bengaluru, India', time: 'Just Now', status: 'Success' },
+    { id: 2, event: 'Document Upload', ip: '198.51.100.101', location: 'Bengaluru, India', time: '1 hour ago', status: 'Completed' },
+    { id: 3, event: 'Profile Update', ip: '198.51.100.101', location: 'Bengaluru, India', time: 'Yesterday', status: 'Success' },
   ]);
 
   const [isBlocked, setIsBlocked] = useState(false);
 
-  // Trigger telemetry log when visiting dashboard
+  useEffect(() => {
+    const tabFromUrl = new URLSearchParams(location.search).get('tab');
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [location]);
+
+  // Log activity silently to backend (no security jargon on screen)
   useEffect(() => {
     logPortalActivity({
       event_name: 'EMPLOYEE_DASHBOARD_ACCESS',
@@ -37,7 +55,7 @@ export const PortalDashboard = () => {
       country: 'India',
       city: 'Bengaluru',
       device: 'Windows Chrome'
-    }).catch(err => console.log('Telemetry stream active'));
+    }).catch(() => {});
   }, [user]);
 
   const handleFileUpload = async (e) => {
@@ -55,18 +73,18 @@ export const PortalDashboard = () => {
 
     try {
       const res = await uploadPortalDocument(formData);
-      setUploadMessage(`File '${res.filename}' uploaded successfully. Hash: ${res.file_hash.substring(0, 16)}...`);
+      setUploadMessage(`Document '${res.filename}' processed successfully.`);
       setActivities(prev => [
-        { id: Date.now(), event: 'DOCUMENT_UPLOAD', ip: '198.51.100.101', country: 'India', time: 'Just Now', status: 'CLEAN' },
+        { id: Date.now(), event: 'Document Upload', ip: '198.51.100.101', location: 'Bengaluru, India', time: 'Just Now', status: 'Completed' },
         ...prev
       ]);
       setFile(null);
     } catch (err) {
-      console.error('File upload error:', err);
-      const detail = err.response?.data?.detail || 'File upload rejected by security scan.';
+      console.error('Upload error:', err);
+      const detail = err.response?.data?.detail || 'Document upload request failed.';
       setUploadError(detail);
       
-      if (detail.includes('Malicious') || detail.includes('Threat')) {
+      if (detail.includes('Malicious') || detail.includes('Threat') || detail.includes('Rejected')) {
         setIsBlocked(true);
       }
     } finally {
@@ -80,7 +98,7 @@ export const PortalDashboard = () => {
     setPwdError(null);
 
     if (!oldPassword || !newPassword) {
-      setPwdError('Please fill in both password fields.');
+      setPwdError('Please fill in all password fields.');
       return;
     }
 
@@ -90,26 +108,23 @@ export const PortalDashboard = () => {
         source_ip: '198.51.100.101',
         user_id: user?.username || 'employee-user'
       });
-      setPwdMessage('Password successfully updated. Security log recorded.');
+      setPwdMessage('Account password updated successfully.');
       setOldPassword('');
       setNewPassword('');
     } catch (err) {
-      setPwdError('Password update failed.');
+      setPwdError('Password update failed. Please try again.');
     }
   };
 
   if (isBlocked) {
     return (
-      <div className="max-w-xl mx-auto my-12 p-8 bg-red-950/40 border border-red-500/40 rounded-2xl text-center space-y-4">
-        <div className="p-4 bg-red-500/20 text-red-400 rounded-full w-fit mx-auto border border-red-500/30">
-          <ShieldAlert className="w-10 h-10 animate-bounce" />
+      <div className="max-w-xl mx-auto my-16 p-8 bg-slate-950 border border-slate-800 rounded-2xl text-center space-y-4 shadow-2xl">
+        <div className="p-4 bg-red-500/10 text-red-400 rounded-full w-fit mx-auto border border-red-500/20">
+          <Lock className="w-10 h-10" />
         </div>
-        <h2 className="text-2xl font-extrabold text-white">403 FORBIDDEN - ACCESS DENIED</h2>
-        <p className="text-xs text-red-300">
-          Security Threat Detected: Malicious executable or unauthorized script payload blocked by Autonomous SOC Lambda Remediation.
-        </p>
-        <p className="font-mono text-xs text-slate-400">
-          Source IP: 198.51.100.101 | Containment Action: Account Locked & Security Group IP Ingress Blocked.
+        <h2 className="text-2xl font-extrabold text-white">403 Forbidden - Access Locked</h2>
+        <p className="text-xs text-slate-400">
+          Your request or file upload could not be processed. Please contact your company administrator.
         </p>
       </div>
     );
@@ -117,7 +132,7 @@ export const PortalDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Employee Profile Header */}
+      {/* Top Profile Header Bar */}
       <div className="glass-panel p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <div className="w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xl font-bold">
@@ -128,42 +143,29 @@ export const PortalDashboard = () => {
             <p className="text-xs text-slate-400 mt-0.5">{user?.email || 'analyst@enterprise.com'}</p>
             <div className="flex items-center space-x-2 mt-2">
               <span className="px-2.5 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-full uppercase">
-                {user?.role || 'Security Analyst'}
+                {user?.role || 'Employee'}
               </span>
               <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold rounded-full uppercase flex items-center space-x-1">
                 <CheckCircle2 className="w-3 h-3" />
-                <span>Verified Baseline</span>
+                <span>Active Account</span>
               </span>
             </div>
           </div>
         </div>
 
-        {/* Tab Selection */}
-        <div className="flex items-center space-x-2 border border-slate-800 bg-slate-950 p-1.5 rounded-xl text-xs">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${activeTab === 'overview' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('upload')}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${activeTab === 'upload' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            Document Upload
-          </button>
-          <button
-            onClick={() => setActiveTab('password')}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${activeTab === 'password' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            Security & Password
-          </button>
-          <button
-            onClick={() => setActiveTab('activity')}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${activeTab === 'activity' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            Activity History
-          </button>
+        {/* Tab Selection Bar */}
+        <div className="flex flex-wrap items-center gap-1 border border-slate-800 bg-slate-950 p-1.5 rounded-xl text-xs">
+          {['overview', 'profile', 'documents', 'notifications', 'activity', 'settings'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-3 py-1.5 rounded-lg font-medium capitalize transition-colors ${
+                activeTab === tab ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -171,45 +173,67 @@ export const PortalDashboard = () => {
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-2">
-            <span className="text-xs text-slate-400 font-medium uppercase">Last Verified Login</span>
+            <span className="text-xs text-slate-400 font-medium uppercase">Last Login Time</span>
             <div className="flex items-center space-x-2 text-white font-bold text-lg">
               <Clock className="w-5 h-5 text-blue-400" />
               <span>Today at 09:15 UTC</span>
             </div>
-            <p className="text-[11px] text-slate-500">Automated baseline check passed</p>
+            <p className="text-[11px] text-slate-500">Verified Workstation Session</p>
           </div>
 
           <div className="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-2">
-            <span className="text-xs text-slate-400 font-medium uppercase">Primary Location</span>
+            <span className="text-xs text-slate-400 font-medium uppercase">Workstation Location</span>
             <div className="flex items-center space-x-2 text-white font-bold text-lg">
               <MapPin className="w-5 h-5 text-emerald-400" />
               <span>Bengaluru, India</span>
             </div>
-            <p className="text-[11px] text-slate-500">UBA Geographic Baseline</p>
+            <p className="text-[11px] text-slate-500">Primary Office Location</p>
           </div>
 
           <div className="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-2">
-            <span className="text-xs text-slate-400 font-medium uppercase">Device Profile</span>
+            <span className="text-xs text-slate-400 font-medium uppercase">System Device</span>
             <div className="flex items-center space-x-2 text-white font-bold text-lg">
               <Laptop className="w-5 h-5 text-purple-400" />
-              <span>Windows Chrome</span>
+              <span>Windows Workstation</span>
             </div>
-            <p className="text-[11px] text-slate-500">Trusted Workstation ID</p>
+            <p className="text-[11px] text-slate-500">Enterprise Managed Device</p>
           </div>
         </div>
       )}
 
-      {/* Tab 2: Document Upload */}
-      {activeTab === 'upload' && (
+      {/* Tab 2: Profile */}
+      {activeTab === 'profile' && (
+        <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4 max-w-xl">
+          <h3 className="text-base font-bold text-white flex items-center space-x-2">
+            <User className="w-5 h-5 text-blue-400" />
+            <span>Employee Profile Details</span>
+          </h3>
+          <div className="space-y-3 text-xs">
+            <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex justify-between">
+              <span className="text-slate-400">Username:</span>
+              <span className="text-white font-semibold">{user?.username || 'Employee'}</span>
+            </div>
+            <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex justify-between">
+              <span className="text-slate-400">Email Address:</span>
+              <span className="text-white font-semibold">{user?.email || 'employee@enterprise.com'}</span>
+            </div>
+            <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex justify-between">
+              <span className="text-slate-400">Role:</span>
+              <span className="text-blue-400 font-semibold">{user?.role || 'Employee'}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 3: Documents */}
+      {(activeTab === 'documents' || activeTab === 'upload') && (
         <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-5 max-w-2xl">
           <div>
             <h3 className="text-base font-bold text-white flex items-center space-x-2">
               <UploadCloud className="w-5 h-5 text-blue-400" />
-              <span>Upload Corporate Document</span>
+              <span>Upload Employee File</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Select files for corporate processing. Executables (.exe, .sh) or malicious payloads trigger immediate security containment.
-            </p>
+            <p className="text-xs text-slate-400 mt-1">Select documents for corporate record processing.</p>
           </div>
 
           {uploadMessage && (
@@ -260,25 +284,85 @@ export const PortalDashboard = () => {
               {uploading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Scanning & Uploading File...</span>
+                  <span>Processing File...</span>
                 </>
               ) : (
-                <span>Process Document</span>
+                <span>Upload Document</span>
               )}
             </button>
           </form>
         </div>
       )}
 
-      {/* Tab 3: Security & Password */}
-      {activeTab === 'password' && (
+      {/* Tab 4: Notifications */}
+      {activeTab === 'notifications' && (
+        <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4 max-w-xl">
+          <h3 className="text-base font-bold text-white flex items-center space-x-2">
+            <Bell className="w-5 h-5 text-blue-400" />
+            <span>Employee Notifications</span>
+          </h3>
+          <div className="space-y-3">
+            {notifications.map((n) => (
+              <div key={n.id} className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white">{n.title}</span>
+                  <span className="text-[10px] text-slate-500">{n.time}</span>
+                </div>
+                <p className="text-xs text-slate-400">{n.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tab 5: Activity History */}
+      {activeTab === 'activity' && (
+        <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+          <h3 className="text-base font-bold text-white flex items-center space-x-2">
+            <FileText className="w-5 h-5 text-blue-400" />
+            <span>Personal Activity History</span>
+          </h3>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="text-slate-400 border-b border-slate-800 bg-slate-900/40">
+                <tr>
+                  <th className="pb-3 pt-2 font-medium">Activity</th>
+                  <th className="pb-3 pt-2 font-medium">IP Address</th>
+                  <th className="pb-3 pt-2 font-medium">Location</th>
+                  <th className="pb-3 pt-2 font-medium">Time</th>
+                  <th className="pb-3 pt-2 font-medium text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
+                {activities.map((act) => (
+                  <tr key={act.id} className="hover:bg-slate-800/30">
+                    <td className="py-3 font-medium text-slate-200">{act.event}</td>
+                    <td className="py-3 font-mono text-slate-400">{act.ip}</td>
+                    <td className="py-3 text-slate-300">{act.location}</td>
+                    <td className="py-3 text-slate-400">{act.time}</td>
+                    <td className="py-3 text-right">
+                      <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-bold text-[10px]">
+                        {act.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 6: Settings */}
+      {activeTab === 'settings' && (
         <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-5 max-w-xl">
           <div>
             <h3 className="text-base font-bold text-white flex items-center space-x-2">
-              <Key className="w-5 h-5 text-blue-400" />
-              <span>Change Account Password</span>
+              <Settings className="w-5 h-5 text-blue-400" />
+              <span>Change Password</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Update your password. Password changes emit audit events to the SOC log stream.</p>
+            <p className="text-xs text-slate-400 mt-1">Update your employee login password.</p>
           </div>
 
           {pwdMessage && (
@@ -323,45 +407,6 @@ export const PortalDashboard = () => {
               Update Password
             </button>
           </form>
-        </div>
-      )}
-
-      {/* Tab 4: Activity History */}
-      {activeTab === 'activity' && (
-        <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h3 className="text-base font-bold text-white flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-blue-400" />
-            <span>Personal Activity Audit Stream</span>
-          </h3>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="text-slate-400 border-b border-slate-800 bg-slate-900/40">
-                <tr>
-                  <th className="pb-3 pt-2 font-medium">Event Name</th>
-                  <th className="pb-3 pt-2 font-medium">Source IP</th>
-                  <th className="pb-3 pt-2 font-medium">Location</th>
-                  <th className="pb-3 pt-2 font-medium">Time</th>
-                  <th className="pb-3 pt-2 font-medium text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {activities.map((act) => (
-                  <tr key={act.id} className="hover:bg-slate-800/30">
-                    <td className="py-3 font-medium text-slate-200">{act.event}</td>
-                    <td className="py-3 font-mono text-slate-400">{act.ip}</td>
-                    <td className="py-3 text-slate-300">{act.country}</td>
-                    <td className="py-3 text-slate-400">{act.time}</td>
-                    <td className="py-3 text-right">
-                      <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-bold text-[10px]">
-                        {act.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
     </div>

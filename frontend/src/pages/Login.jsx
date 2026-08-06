@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Shield, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Building2, Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { loginUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -31,10 +31,16 @@ export const Login = () => {
     try {
       const data = await loginUser({ email: email.trim(), password });
       login(data.access_token, data.user, rememberMe);
-      navigate('/');
+
+      // Role-Based Redirection
+      const role = data.user?.role || 'Employee';
+      if (role === 'Security Analyst' || role === 'Admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/portal/dashboard');
+      }
     } catch (err) {
       console.error('Login error:', err);
-      // Return generic error message unless account is locked
       const detail = err.response?.data?.detail;
       if (detail && detail.includes('locked')) {
         setError('Account temporarily locked. Try again later.');
@@ -47,33 +53,33 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Dynamic Background Glow Elements */}
+    <div className="min-h-screen bg-[#070a11] flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      {/* Background Glow Elements */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="glass-panel w-full max-w-md p-8 rounded-2xl border border-slate-800 shadow-2xl relative z-10">
         <div className="flex flex-col items-center text-center space-y-3 mb-6">
           <div className="p-3 bg-blue-600/20 text-blue-400 rounded-2xl border border-blue-500/30 shadow-lg shadow-blue-500/10">
-            <Shield className="w-8 h-8 animate-pulse" />
+            <Building2 className="w-8 h-8" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white tracking-wide">AUTONOMOUS CLOUD SOC</h1>
-            <p className="text-xs text-slate-400 mt-1">Zero Trust Security Operations Console</p>
+            <h1 className="text-xl font-bold text-white tracking-wide">GLOBEX ENTERPRISE PORTAL</h1>
+            <p className="text-xs text-slate-400 mt-1">Corporate Employee Sign In</p>
           </div>
         </div>
 
-        {/* Registration Success Notification Banner */}
+        {/* Success Banner */}
         {successMessage && (
-          <div className="mb-5 p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start space-x-3 text-emerald-400 text-xs animate-fade-in">
+          <div className="mb-5 p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl flex items-start space-x-3 text-emerald-400 text-xs">
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{successMessage}</span>
           </div>
         )}
 
-        {/* Error Notification Banner */}
+        {/* Error Banner */}
         {error && (
-          <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start space-x-3 text-red-400 text-xs animate-shake">
+          <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl flex items-start space-x-3 text-red-400 text-xs">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -88,7 +94,7 @@ export const Login = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="analyst@enterprise.com"
+                placeholder="employee@enterprise.com"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                 required
               />
@@ -130,11 +136,11 @@ export const Login = () => {
             {submitting ? (
               <div className="flex items-center space-x-2">
                 <Loader2 className="w-4 h-4 animate-spin text-white" />
-                <span>Authenticating...</span>
+                <span>Signing In...</span>
               </div>
             ) : (
               <>
-                <span>Authenticate to SOC Console</span>
+                <span>Sign In to Workspace</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -143,13 +149,13 @@ export const Login = () => {
 
         <div className="mt-6 pt-4 border-t border-slate-800 text-center space-y-3">
           <p className="text-xs text-slate-400">
-            Don't have an analyst account?{' '}
+            Don't have an employee account?{' '}
             <Link to="/register" className="text-blue-400 hover:text-blue-300 font-medium underline">
-              Register Analyst Account
+              Register Employee Account
             </Link>
           </p>
           <p className="text-[11px] text-slate-500">
-            Protected by AWS WORM Object Lock & KMS Encryption
+            Globex Enterprise Confidential Workspace
           </p>
         </div>
       </div>

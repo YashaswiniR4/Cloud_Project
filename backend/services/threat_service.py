@@ -4,6 +4,7 @@ ML Threat Classification, Zero-Day Anomaly Detection, User Behavior Analytics (U
 Honeypots, Alert Dispatching, and PostgreSQL (Supabase) Database Persistence.
 """
 
+import uuid
 from typing import Dict, Any, List
 from datetime import datetime, timezone
 
@@ -66,7 +67,7 @@ class ThreatOperationsService:
         sample_batch = {
             "Records": [
                 {
-                    "eventID": "ct-init-001",
+                    "eventID": f"ct-init-{uuid.uuid4().hex[:8]}",
                     "eventName": "AttachUserPolicy",
                     "eventTime": datetime.now(timezone.utc).isoformat(),
                     "eventSource": "iam.amazonaws.com",
@@ -74,7 +75,7 @@ class ThreatOperationsService:
                     "userIdentity": {"type": "IAMUser", "arn": "arn:aws:iam::123456789012:user/attacker"}
                 },
                 {
-                    "eventID": "ct-init-002",
+                    "eventID": f"ct-init-{uuid.uuid4().hex[:8]}",
                     "eventName": "AuthorizeSecurityGroupIngress",
                     "eventTime": datetime.now(timezone.utc).isoformat(),
                     "eventSource": "ec2.amazonaws.com",
@@ -124,8 +125,10 @@ class ThreatOperationsService:
             total_threat_score = min(100.0, base_score + uba_result["anomaly_boost"])
             severity = "HIGH" if total_threat_score >= 70.0 else ("MEDIUM" if total_threat_score >= 40.0 else "LOW")
 
+            unique_event_id = f"portal-{int(datetime.now().timestamp())}-{uuid.uuid4().hex[:6]}"
+
             event_dict = {
-                "event_id": f"portal-{int(datetime.now().timestamp())}",
+                "event_id": unique_event_id,
                 "event_name": event_name,
                 "event_time": datetime.now(timezone.utc).isoformat(),
                 "event_source": "corporate.employee.portal",
@@ -168,7 +171,7 @@ class ThreatOperationsService:
                 ]
 
                 timeline = IncidentTimeline(
-                    incident_id=f"INC-{int(datetime.now().timestamp())}",
+                    incident_id=f"INC-{int(datetime.now().timestamp())}-{uuid.uuid4().hex[:4]}",
                     title=f"Security Incident: {event_name} from {source_ip}",
                     severity=severity,
                     status="OPEN",
