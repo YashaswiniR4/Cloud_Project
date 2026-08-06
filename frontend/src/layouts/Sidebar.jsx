@@ -11,11 +11,10 @@ import {
   LogOut,
   Shield,
   FlaskConical,
-  GitCommit,
-  Building2
+  GitCommit
 } from 'lucide-react';
 
-export const Sidebar = ({ onOpenSimulation }) => {
+export const Sidebar = () => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'CloudTrail Logs', path: '/logs', icon: FileText },
@@ -41,22 +40,8 @@ export const Sidebar = ({ onOpenSimulation }) => {
         </div>
       </div>
 
-      {/* Target Corporate Portal Switcher */}
-      <div className="p-3 bg-slate-950/60 border-b border-slate-800 px-4">
-        <NavLink
-          to="/portal"
-          className="flex items-center justify-between px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 rounded-xl text-xs text-blue-400 font-medium transition-colors"
-        >
-          <div className="flex items-center space-x-2">
-            <Building2 className="w-4 h-4" />
-            <span>Target Employee App</span>
-          </div>
-          <span className="text-[10px] bg-blue-500/20 px-1.5 py-0.5 rounded font-mono">LIVE</span>
-        </NavLink>
-      </div>
-
       {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (

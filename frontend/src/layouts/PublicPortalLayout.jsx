@@ -18,20 +18,20 @@ export const PublicPortalLayout = () => {
       {/* Top Corporate Header Bar */}
       <header className="border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/portal" className="flex items-center space-x-3 group">
+          <Link to="/" className="flex items-center space-x-3 group">
             <div className="p-2 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30 group-hover:bg-blue-600/30 transition-colors">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-bold text-white tracking-wide text-base block">GLOBEX CORP</span>
-              <span className="text-[10px] text-slate-400 font-mono tracking-wider block uppercase">Employee Enterprise Workspace</span>
+              <span className="font-bold text-white tracking-wide text-base block">ABC CORPORATION</span>
+              <span className="text-[10px] text-slate-400 font-mono tracking-wider block uppercase">Employee Enterprise Gateway</span>
             </div>
           </Link>
 
           <nav className="flex items-center space-x-6">
             <Link 
-              to="/portal" 
-              className={`text-xs font-medium transition-colors flex items-center space-x-1.5 ${location.pathname === '/portal' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}
+              to="/" 
+              className={`text-xs font-medium transition-colors flex items-center space-x-1.5 ${location.pathname === '/' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}
             >
               <Home className="w-3.5 h-3.5" />
               <span>Home</span>
@@ -40,15 +40,23 @@ export const PublicPortalLayout = () => {
             {isAuthenticated && (
               <>
                 <Link 
-                  to="/portal/dashboard" 
-                  className={`text-xs font-medium transition-colors flex items-center space-x-1.5 ${location.pathname === '/portal/dashboard' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}
+                  to="/dashboard" 
+                  className={`text-xs font-medium transition-colors flex items-center space-x-1.5 ${location.pathname === '/dashboard' ? 'text-blue-400 font-bold' : 'text-slate-300 hover:text-white'}`}
                 >
                   <LayoutDashboard className="w-3.5 h-3.5" />
                   <span>Dashboard</span>
                 </Link>
 
                 <Link 
-                  to="/portal/dashboard?tab=documents" 
+                  to="/dashboard?tab=profile" 
+                  className="text-xs font-medium text-slate-300 hover:text-white transition-colors flex items-center space-x-1.5"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>Profile</span>
+                </Link>
+
+                <Link 
+                  to="/dashboard?tab=documents" 
                   className="text-xs font-medium text-slate-300 hover:text-white transition-colors flex items-center space-x-1.5"
                 >
                   <FileText className="w-3.5 h-3.5" />
@@ -56,7 +64,7 @@ export const PublicPortalLayout = () => {
                 </Link>
 
                 <Link 
-                  to="/portal/dashboard?tab=notifications" 
+                  to="/dashboard?tab=notifications" 
                   className="text-xs font-medium text-slate-300 hover:text-white transition-colors flex items-center space-x-1.5"
                 >
                   <Bell className="w-3.5 h-3.5" />
@@ -64,7 +72,7 @@ export const PublicPortalLayout = () => {
                 </Link>
 
                 <Link 
-                  to="/portal/dashboard?tab=activity" 
+                  to="/dashboard?tab=activity" 
                   className="text-xs font-medium text-slate-300 hover:text-white transition-colors flex items-center space-x-1.5"
                 >
                   <History className="w-3.5 h-3.5" />
@@ -72,7 +80,7 @@ export const PublicPortalLayout = () => {
                 </Link>
 
                 <Link 
-                  to="/portal/dashboard?tab=settings" 
+                  to="/dashboard?tab=settings" 
                   className="text-xs font-medium text-slate-300 hover:text-white transition-colors flex items-center space-x-1.5"
                 >
                   <Settings className="w-3.5 h-3.5" />
@@ -88,8 +96,8 @@ export const PublicPortalLayout = () => {
                     {user?.username?.[0]?.toUpperCase() || 'E'}
                   </div>
                   <div className="hidden sm:block text-left">
-                    <p className="text-xs font-semibold text-white leading-tight">{user?.username}</p>
-                    <p className="text-[10px] text-slate-400 leading-tight">{user?.email}</p>
+                    <p className="text-xs font-semibold text-white leading-tight">{user?.username || 'Employee'}</p>
+                    <p className="text-[10px] text-slate-400 leading-tight">{user?.email || 'user@abccorp.com'}</p>
                   </div>
                 </div>
                 <button
@@ -129,9 +137,9 @@ export const PublicPortalLayout = () => {
       {/* Corporate Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950/60 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p>© 2026 Globex Corporation. Confidential Employee Workspace.</p>
+          <p>© 2026 ABC Corporation. All Rights Reserved. Confidential Employee Gateway.</p>
           <div className="flex items-center space-x-4">
-            <span className="text-[11px] text-slate-400">Version 2.4.0 (Enterprise Build)</span>
+            <span className="text-[11px] text-slate-400">Enterprise Operations Platform</span>
           </div>
         </div>
       </footer>

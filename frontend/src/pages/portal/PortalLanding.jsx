@@ -12,20 +12,20 @@ export const PortalLanding = () => {
         <div className="relative z-10 max-w-2xl space-y-6">
           <div className="inline-flex items-center space-x-2 px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-xs font-semibold text-blue-400">
             <Building2 className="w-3.5 h-3.5" />
-            <span>Globex Enterprise Workspace</span>
+            <span>ABC Corporation Gateway</span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-            Corporate Employee Operations & Resource Portal
+            Enterprise Operations & Employee Resource Portal
           </h1>
 
           <p className="text-sm text-slate-300 leading-relaxed">
-            Welcome to the official Globex Enterprise Employee Gateway. Perform document uploads, manage employee profiles, change account credentials, and review corporate activity history.
+            Welcome to the official ABC Corporation Employee Gateway. Upload corporate documents, manage employee profiles, change account credentials, and review business activity history.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
             <Link
-              to="/portal/dashboard"
+              to="/dashboard"
               className="px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs transition-all shadow-lg shadow-blue-600/25 flex items-center space-x-2"
             >
               <span>Access Employee Dashboard</span>
@@ -36,7 +36,7 @@ export const PortalLanding = () => {
               to="/login"
               className="px-5 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-medium rounded-xl text-xs transition-all"
             >
-              Employee Login
+              Employee Sign In
             </Link>
           </div>
         </div>
@@ -58,7 +58,7 @@ export const PortalLanding = () => {
           <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl w-fit border border-emerald-500/20">
             <UserCheck className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-white">Employee Profile Workspace</h3>
+          <h3 className="text-base font-bold text-white">Profile Workspace</h3>
           <p className="text-xs text-slate-400 leading-relaxed">
             Manage personal employee information, department credentials, and workstation preferences.
           </p>

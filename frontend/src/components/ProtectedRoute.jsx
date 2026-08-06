@@ -9,7 +9,7 @@ export const ProtectedRoute = ({ allowedRoles }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0b0f19] flex items-center justify-center p-4">
-        <LoadingSpinner label="Authenticating Session..." />
+        <LoadingSpinner label="Authenticating Security Operations Console Session..." />
       </div>
     );
   }
@@ -18,13 +18,15 @@ export const ProtectedRoute = ({ allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Role-Based Access Control (RBAC) Enforcement
+  // Role-Based Access Control (RBAC) Enforcement:
+  // Security Analyst & Admin -> allowed into SOC Console (localhost:5174)
+  // Employee -> redirected to Corporate Web Portal (localhost:5173)
   if (allowedRoles && allowedRoles.length > 0) {
-    const userRole = user?.role || 'Employee';
+    const userRole = user?.role || 'Security Analyst';
     const isAllowed = allowedRoles.includes(userRole);
     if (!isAllowed) {
-      // Normal employees attempting to access SOC dashboard are redirected to employee portal
-      return <Navigate to="/portal/dashboard" replace />;
+      window.location.href = 'http://localhost:5173/dashboard';
+      return null;
     }
   }
 
