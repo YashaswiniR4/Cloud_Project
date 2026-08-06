@@ -1,9 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { RefreshCw, Activity, User, LogOut } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { RefreshCw, Activity, User, LogOut, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-export const Navbar = ({ onRefresh, healthStatus }) => {
+export const Navbar = ({ onRefresh, healthStatus, alertCount = 0 }) => {
   const isHealthy = healthStatus?.status === 'HEALTHY';
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -24,6 +24,15 @@ export const Navbar = ({ onRefresh, healthStatus }) => {
       </div>
 
       <div className="flex items-center space-x-4">
+        {/* Live Dispatched Alerts Counter Button */}
+        <Link
+          to="/alerts"
+          className="flex items-center space-x-2 px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold transition-colors"
+        >
+          <Bell className="w-4 h-4 animate-bounce text-red-400" />
+          <span>Alerts ({alertCount})</span>
+        </Link>
+
         {/* System Health Badge */}
         <div className="flex items-center space-x-2 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs">
           <Activity className={`w-4 h-4 ${isHealthy ? 'text-emerald-400' : 'text-red-400'}`} />
@@ -64,4 +73,3 @@ export const Navbar = ({ onRefresh, healthStatus }) => {
     </header>
   );
 };
-
