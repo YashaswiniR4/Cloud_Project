@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, ShieldAlert, CheckCircle, RefreshCw, Zap, Shield, Lock, User, Globe, Laptop } from 'lucide-react';
+import { Bell, ShieldAlert, CheckCircle, RefreshCw, Zap, Shield, Lock, User, Globe, Mail } from 'lucide-react';
 import { getAlerts, getRemediations } from '../services/api';
 import { SeverityBadge } from '../components/SeverityBadge';
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -72,20 +72,25 @@ export const Alerts = () => {
                     ? rawName
                     : 'Attacker_User';
 
+                  const userEmailDisplay = alert.user_email || `${usernameDisplay.toLowerCase()}@sentinelai.com`;
+
                   return (
                     <div key={idx} className="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white tracking-wide">{alert.event_name || 'SECURITY_ALERT'}</span>
+                        <span className="text-xs font-bold text-red-400 tracking-wide flex items-center space-x-1.5">
+                          <ShieldAlert className="w-4 h-4" />
+                          <span>{alert.event_name || 'SECURITY_ALERT'}</span>
+                        </span>
                         <SeverityBadge severity={alert.severity || 'HIGH'} />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                      <div className="grid grid-cols-3 gap-2 text-xs pt-1">
                         <div className="p-2 bg-slate-900/60 rounded-lg border border-slate-800 space-y-0.5">
                           <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center space-x-1">
                             <Globe className="w-3 h-3 text-blue-400" />
-                            <span>Attacker IP Address</span>
+                            <span>Attacker IP</span>
                           </span>
-                          <p className="font-mono text-blue-400 font-bold">{alert.source_ip || '198.51.100.101'}</p>
+                          <p className="font-mono text-blue-400 font-bold truncate">{alert.source_ip || '198.51.100.101'}</p>
                         </div>
 
                         <div className="p-2 bg-slate-900/60 rounded-lg border border-slate-800 space-y-0.5">
@@ -95,6 +100,16 @@ export const Alerts = () => {
                           </span>
                           <p className="font-mono text-slate-200 font-semibold truncate">
                             {usernameDisplay}
+                          </p>
+                        </div>
+
+                        <div className="p-2 bg-slate-900/60 rounded-lg border border-slate-800 space-y-0.5">
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase flex items-center space-x-1">
+                            <Mail className="w-3 h-3 text-purple-400" />
+                            <span>User Email</span>
+                          </span>
+                          <p className="font-mono text-slate-300 font-medium truncate text-[11px]">
+                            {userEmailDisplay}
                           </p>
                         </div>
                       </div>

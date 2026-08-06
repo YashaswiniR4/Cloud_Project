@@ -93,6 +93,7 @@ class ThreatOperationsService:
         event_name: str,
         source_ip: str,
         user_id: str = None,
+        user_email: str = None,
         user_arn: str = None,
         country: str = "India",
         city: str = "Bengaluru",
@@ -106,6 +107,7 @@ class ThreatOperationsService:
         db = SessionLocal()
         try:
             effective_user_id = user_id or "Attacker_User"
+            effective_email = user_email or f"{effective_user_id.lower()}@sentinelai.com"
 
             # 1. Evaluate User Behavior Analytics (UBA)
             uba_result = evaluate_user_behavior(
@@ -121,8 +123,8 @@ class ThreatOperationsService:
             base_score = 10.0
             if "FAIL" in event_name.upper() or "LOCK" in event_name.upper():
                 base_score += 45.0
-            if "INJECTION" in event_name.upper() or "MALICIOUS" in event_name.upper():
-                base_score += 70.0
+            if "INJECTION" in event_name.upper() or "MALICIOUS" in event_name.upper() or "WEBSHELL" in event_name.upper() or "RCE" in event_name.upper() or "EXECUTABLE" in event_name.upper() or "XSS" in event_name.upper():
+                base_score += 75.0
 
             total_threat_score = min(100.0, base_score + uba_result["anomaly_boost"])
             severity = "HIGH" if total_threat_score >= 70.0 else ("MEDIUM" if total_threat_score >= 40.0 else "LOW")
@@ -136,6 +138,7 @@ class ThreatOperationsService:
                 "event_source": "corporate.employee.portal",
                 "source_ip": source_ip,
                 "user_id": effective_user_id,
+                "user_email": effective_email,
                 "user_arn": user_arn or f"arn:aws:iam::123456789012:user/{effective_user_id}",
                 "threat_score": total_threat_score,
                 "severity": severity,
@@ -161,6 +164,7 @@ class ThreatOperationsService:
                     "event_name": event_name,
                     "threat_score": total_threat_score,
                     "user_id": effective_user_id,
+                    "user_email": effective_email,
                     "user_arn": event_dict["user_arn"]
                 })
                 crud.create_alert(db, alert)
@@ -168,7 +172,7 @@ class ThreatOperationsService:
 
                 # Create Incident Timeline Entry
                 timeline_steps = [
-                    {"step": 1, "title": "Employee Portal Action", "desc": f"User {effective_user_id} attempted {event_name}", "timestamp": datetime.now(timezone.utc).isoformat()},
+                    {"step": 1, "title": "Employee Portal Action", "desc": f"User {effective_user_id} ({effective_email}) attempted {event_name}", "timestamp": datetime.now(timezone.utc).isoformat()},
                     {"step": 2, "title": "UBA Anomaly Detection", "desc": f"UBA Boost +{uba_result['anomaly_boost']} | {uba_result['reasons']}", "timestamp": datetime.now(timezone.utc).isoformat()},
                     {"step": 3, "title": "ML Threat Classification", "desc": f"Assigned Threat Score: {total_threat_score}/100 ({severity})", "timestamp": datetime.now(timezone.utc).isoformat()},
                     {"step": 4, "title": "Lambda Remediation Executed", "desc": f"Automated Security Group IP Containment for {source_ip}", "timestamp": datetime.now(timezone.utc).isoformat()},
@@ -228,6 +232,7 @@ class ThreatOperationsService:
                     high_risk_count += 1
                     user_arn = event.get("user_arn", "arn:aws:iam::123456789012:user/Attacker_User")
                     user_id = user_arn.split("/")[-1] if "/" in user_arn else "Attacker_User"
+                    user_email = f"{user_id.lower()}@sentinelai.com"
 
                     alert = self.alert_dispatcher.dispatch_alert({
                         "severity": event["severity"],
@@ -235,6 +240,7 @@ class ThreatOperationsService:
                         "event_name": event["event_name"],
                         "threat_score": event["threat_score"],
                         "user_id": user_id,
+                        "user_email": user_email,
                         "user_arn": user_arn
                     })
                     crud.create_alert(db, alert)
@@ -253,7 +259,7 @@ class ThreatOperationsService:
             return {
                 "processed_count": len(parsed_events),
                 "high_risk_count": high_risk_count,
-                "events": result if 'result' in locals() else result if 'result' in locals() else result if 'result' in locals() else result if 'result' in locals() else parsed_events
+                "events": parsed_events
             }
         finally:
             db.close()
@@ -271,6 +277,7 @@ class ThreatOperationsService:
             telemetry["severity"] = "HIGH"
             telemetry["event_name"] = "SSH_BRUTE_FORCE"
             telemetry["user_id"] = username
+            telemetry["user_email"] = f"{username.lower()}@attacker-net.org"
             telemetry["user_arn"] = f"arn:aws:iam::123456789012:user/{username}"
 
             self.all_threat_logs.append(telemetry)
@@ -289,6 +296,7 @@ class ThreatOperationsService:
                 "event_name": "SSH_BRUTE_FORCE",
                 "threat_score": telemetry["threat_score"],
                 "user_id": username,
+                "user_email": telemetry["user_email"],
                 "user_arn": telemetry["user_arn"]
             })
             crud.create_alert(db, alert)
@@ -318,8 +326,9 @@ class ThreatOperationsService:
 
             telemetry["threat_intel"] = reputation
             telemetry["severity"] = "HIGH" if telemetry["threat_score"] > 70.0 else "MEDIUM"
-            telemetry["event_name"] = telemetry["threat_type"]
+            telemetry["event_name"] = "MALICIOUS_SQLI_PAYLOAD"
             telemetry["user_id"] = "web_exploit_attacker"
+            telemetry["user_email"] = "web_exploit@attacker-net.org"
             telemetry["user_arn"] = "arn:aws:iam::123456789012:user/web_exploit_attacker"
 
             self.all_threat_logs.append(telemetry)
@@ -336,9 +345,10 @@ class ThreatOperationsService:
                 alert = self.alert_dispatcher.dispatch_alert({
                     "severity": telemetry["severity"],
                     "source_ip": source_ip,
-                    "event_name": telemetry["threat_type"],
+                    "event_name": "MALICIOUS_SQLI_PAYLOAD",
                     "threat_score": telemetry["threat_score"],
                     "user_id": "web_exploit_attacker",
+                    "user_email": "web_exploit@attacker-net.org",
                     "user_arn": "arn:aws:iam::123456789012:user/web_exploit_attacker"
                 })
                 crud.create_alert(db, alert)

@@ -75,6 +75,20 @@ export const uploadPortalDocument = async (formData) => {
   return response.data;
 };
 
+export const getPortalDocuments = async (userId) => {
+  const response = await api.get('/portal/documents', {
+    params: { user_id: userId }
+  });
+  return response.data;
+};
+
+export const getPortalActivityHistory = async (userId) => {
+  const response = await api.get('/portal/activity-history', {
+    params: { user_id: userId }
+  });
+  return response.data;
+};
+
 // --- Incident Investigation & UBA APIs ---
 export const getIncidents = async () => {
   const response = await api.get('/incidents');

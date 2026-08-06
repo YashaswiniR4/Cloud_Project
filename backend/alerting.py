@@ -22,13 +22,14 @@ class IncidentAlertDispatcher:
         source_ip = alert_details.get("source_ip", "0.0.0.0")
         event_name = alert_details.get("event_name", alert_details.get("threat_type", "SECURITY_EVENT"))
         threat_score = alert_details.get("threat_score", 0.0)
-        user_id = alert_details.get("user_id") or "Kishan_4"
+        user_id = alert_details.get("user_id") or "Attacker_User"
+        user_email = alert_details.get("user_email") or f"{user_id.lower()}@sentinelai.com"
         user_arn = alert_details.get("user_arn") or f"arn:aws:iam::123456789012:user/{user_id}"
 
         message = (
             f"🚨 [ALERT - {severity}] Cloud Threat Detected!\n"
             f"Timestamp: {timestamp}\n"
-            f"User Account: {user_id}\n"
+            f"User Account: {user_id} ({user_email})\n"
             f"Event: {event_name}\n"
             f"Source IP: {source_ip}\n"
             f"Threat Score: {threat_score}\n"
@@ -42,13 +43,14 @@ class IncidentAlertDispatcher:
             "event_name": event_name,
             "source_ip": source_ip,
             "user_id": user_id,
+            "user_email": user_email,
             "user_arn": user_arn,
             "threat_score": threat_score,
             "message": message,
             "status": "DELIVERED"
         }
         self.dispatched_alerts.append(alert_record)
-        logger.warning(f"ALERT DISPATCHED [{severity}]: {event_name} from {source_ip} (User: {user_id})")
+        logger.warning(f"ALERT DISPATCHED [{severity}]: {event_name} from {source_ip} (User: {user_id} <{user_email}>)")
         return alert_record
 
 
@@ -59,6 +61,7 @@ if __name__ == "__main__":
         "source_ip": "198.51.100.45",
         "event_name": "AttachUserPolicy",
         "threat_score": 95.0,
-        "user_id": "Kishan_4"
+        "user_id": "Attacker_Admin_Probe",
+        "user_email": "attacker@sentinelai.com"
     })
     logger.info(f"Dispatched Alert Message:\n{res['message']}")

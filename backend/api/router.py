@@ -5,6 +5,7 @@ FastAPI APIRouter definitions for SOC Operations & Employee Portal Endpoints
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from typing import Dict, Any, List, Optional
 import hashlib
+from datetime import datetime, timezone
 
 from backend.schemas.telemetry_schemas import (
     CloudTrailBatchPayloadSchema,
@@ -17,10 +18,12 @@ from backend.schemas.dashboard_schemas import (
     DashboardOverviewSchema
 )
 from backend.services.threat_service import threat_ops_service, ThreatOperationsService
+from ml.threat_classifier import CyberThreatClassifier
 
 from backend.auth.security import get_current_user
 from backend.api.auth import auth_router
-from backend.database.models import User, IncidentTimeline, UserBehaviorProfile
+from backend.database import crud
+from backend.database.models import User, IncidentTimeline, UserBehaviorProfile, EmployeeDocument, Event
 from backend.database.database import get_db
 from sqlalchemy.orm import Session
 
@@ -34,6 +37,8 @@ api_router = APIRouter()
 
 # Include Authentication Router (/auth/register, /auth/login, /auth/me, /auth/logout)
 api_router.include_router(auth_router)
+
+classifier = CyberThreatClassifier()
 
 
 @api_router.get("/health", response_model=HealthResponseSchema, summary="System Health Check")
@@ -70,6 +75,7 @@ def log_portal_activity(
     event_name = payload.get("event_name", "EMPLOYEE_ACTION")
     source_ip = payload.get("source_ip", "198.51.100.101")
     user_id = payload.get("user_id", "employee-user")
+    user_email = payload.get("user_email") or f"{user_id.lower()}@sentinelai.com"
     country = payload.get("country", "India")
     city = payload.get("city", "Bengaluru")
     device = payload.get("device", "Windows Chrome")
@@ -78,6 +84,7 @@ def log_portal_activity(
         event_name=event_name,
         source_ip=source_ip,
         user_id=user_id,
+        user_email=user_email,
         country=country,
         city=city,
         device=device,
@@ -94,45 +101,134 @@ def log_portal_activity(
 async def upload_document(
     file: UploadFile = File(...),
     user_id: str = Form("employee-user"),
+    user_email: str = Form(None),
     source_ip: str = Form("198.51.100.101"),
+    db: Session = Depends(get_db),
     service: ThreatOperationsService = Depends(get_threat_service)
 ):
     """
-    Receives uploaded corporate file, computes SHA256 hash, scans for malicious patterns (e.g. .exe, .sh, EICAR),
-    and logs threat telemetry to SOC engine.
+    Receives uploaded corporate file, computes SHA256 hash, scans for malware & attack signatures via ML model,
+    saves clean files to employee document database, and dispatches alerts for malicious payloads.
     """
     contents = await file.read()
     file_hash = hashlib.sha256(contents).hexdigest()
-    filename = file.filename.lower()
+    filename = file.filename
 
-    is_malicious = filename.endswith(".exe") or filename.endswith(".sh") or b"EICAR" in contents or b"eval(" in contents
-    scan_status = "MALICIOUS_THREAT_DETECTED" if is_malicious else "CLEAN"
+    # ML Classifier payload & malware detection
+    attack_label, confidence = classifier.classify_payload_content(filename, contents)
+    is_malicious = attack_label != "BENIGN"
+    scan_status = attack_label if is_malicious else "CLEAN"
 
-    # Route threat log to telemetry pipeline
-    event_name = "MALICIOUS_FILE_UPLOAD_ATTEMPT" if is_malicious else "DOCUMENT_UPLOAD"
+    effective_email = user_email or f"{user_id.lower()}@sentinelai.com"
+
+    if is_malicious:
+        # Route high-risk threat event to SOC engine with exact ML attack classification
+        service.log_portal_activity(
+            event_name=attack_label,
+            source_ip=source_ip,
+            user_id=user_id,
+            user_email=effective_email,
+            payload={
+                "filename": filename,
+                "file_size": len(contents),
+                "file_hash": file_hash,
+                "scan_status": scan_status,
+                "confidence": confidence
+            }
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Upload Rejected: Malicious pattern [{attack_label}] detected in file '{filename}'. Threat reported to SOC."
+        )
+
+    # Benign file: Save record to EmployeeDocument DB table
+    db_user = db.query(User).filter((User.username == user_id) | (User.email == effective_email)).first()
+    db_user_id = db_user.id if db_user else user_id
+
+    doc_record = EmployeeDocument(
+        user_id=db_user_id,
+        filename=filename,
+        file_size_bytes=len(contents),
+        file_hash=file_hash,
+        is_malicious=False,
+        scan_result="CLEAN",
+        uploaded_at=datetime.now(timezone.utc)
+    )
+    db.add(doc_record)
+    db.commit()
+
+    # Log normal background telemetry event (Low Threat Score: 10.0, Severity: LOW - No alert dispatched)
     service.log_portal_activity(
-        event_name=event_name,
+        event_name="BENIGN_DOCUMENT_UPLOAD",
         source_ip=source_ip,
         user_id=user_id,
+        user_email=effective_email,
         payload={
-            "filename": file.filename,
+            "filename": filename,
             "file_size": len(contents),
             "file_hash": file_hash,
-            "scan_status": scan_status
+            "scan_status": "CLEAN"
         }
     )
 
-    if is_malicious:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Upload Rejected: Malicious executable or script detected in file '{file.filename}'. Threat reported to SOC."
-        )
-
     return {
         "status": "SUCCESS",
-        "filename": file.filename,
+        "message": "Document uploaded successfully and scanned clean.",
+        "filename": filename,
         "file_hash": file_hash,
-        "scan_status": scan_status
+        "scan_status": "CLEAN"
+    }
+
+
+@api_router.get("/portal/documents", summary="Retrieve Uploaded Employee Documents")
+def get_user_documents(
+    user_id: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Retrieves all clean uploaded corporate documents for display in employee repository."""
+    query = db.query(EmployeeDocument).filter(EmployeeDocument.is_malicious == False)
+    if user_id:
+        db_user = db.query(User).filter(User.username == user_id).first()
+        if db_user:
+            query = query.filter(EmployeeDocument.user_id == db_user.id)
+    
+    docs = query.order_by(EmployeeDocument.uploaded_at.desc()).all()
+    return {
+        "total_documents": len(docs),
+        "documents": [
+            {
+                "id": doc.id,
+                "filename": doc.filename,
+                "file_size_kb": round(doc.file_size_bytes / 1024, 2),
+                "file_hash": doc.file_hash,
+                "scan_result": doc.scan_result,
+                "uploaded_at": doc.uploaded_at.isoformat()
+            } for doc in docs
+        ]
+    }
+
+
+@api_router.get("/portal/activity-history", summary="Retrieve Personal Portal Activity History")
+def get_user_activity_history(
+    user_id: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Retrieves recent personal portal activities for display under Activity History tab."""
+    query = db.query(Event).filter(Event.event_source == "corporate.employee.portal")
+    events = query.order_by(Event.created_at.desc()).limit(20).all()
+    
+    return {
+        "total_activities": len(events),
+        "activities": [
+            {
+                "id": ev.event_id,
+                "event": ev.event_name,
+                "ip": ev.source_ip,
+                "user_id": ev.raw_payload.get("user_id") if isinstance(ev.raw_payload, dict) else "User",
+                "time": ev.event_time,
+                "status": "Blocked" if ev.is_high_risk else "Completed"
+            } for ev in events
+        ]
     }
 
 
@@ -149,7 +245,6 @@ def get_incidents(
     """Retrieves all step-by-step incident investigation timelines."""
     incidents = db.query(IncidentTimeline).order_by(IncidentTimeline.created_at.desc()).all()
     if not incidents:
-        # Provide baseline timeline if empty
         return {
             "total_incidents": 1,
             "incidents": [
@@ -159,7 +254,7 @@ def get_incidents(
                     "severity": "HIGH",
                     "status": "OPEN",
                     "source_ip": "198.51.100.45",
-                    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+                    "user_arn": "arn:aws:iam::123456789012:user/Attacker_Admin_Probe",
                     "steps": [
                         {"step": 1, "title": "Initial Employee Portal Login", "desc": "User logged in from 198.51.100.45 (India)", "timestamp": "2026-08-06T18:00:00Z"},
                         {"step": 2, "title": "UBA Anomaly Detected", "desc": "Geographic shift: India -> Russia (+45 Risk Boost)", "timestamp": "2026-08-06T18:05:00Z"},
@@ -249,88 +344,108 @@ def get_remediations(
     service: ThreatOperationsService = Depends(get_threat_service),
     current_user: User = Depends(get_current_user)
 ):
-    """Retrieves all automated serverless incident response & remediation logs."""
+    """Retrieves automated incident response remediation logs."""
+    remediations = service.get_dashboard_summary()["remediation_actions"]
     return {
-        "total_remediations": len(service.remediation_handler.remediation_log),
-        "remediations": service.remediation_handler.remediation_log
+        "total_remediations": len(remediations),
+        "remediations": remediations
     }
 
 
-@api_router.get("/threats", summary="Retrieve Active Threat Intel Feeds")
+@api_router.get("/threats", summary="Retrieve Threat Intelligence Feed Data")
 def get_threats(
+    db: Session = Depends(get_db),
     service: ThreatOperationsService = Depends(get_threat_service),
     current_user: User = Depends(get_current_user)
 ):
-    """Retrieves detected security threats and high-risk events."""
-    high_risk = [e for e in service.all_threat_logs if e.get("is_high_risk", False) or e.get("severity") == "HIGH" or e.get("threat_score", 0) > 70]
+    """Retrieves IP reputation scores from Threat Intel Feed."""
+    threats = crud.get_all_threat_intel(db)
     return {
-        "total_threats": len(high_risk),
-        "threats": high_risk
+        "total_threats": len(threats),
+        "threats": [
+            {
+                "source_ip": t.source_ip,
+                "reputation_score": t.reputation_score,
+                "category": t.category,
+                "isp": t.isp,
+                "total_attacks": t.total_attacks,
+                "last_seen": t.last_seen.isoformat()
+            } for t in threats
+        ]
     }
 
 
-@api_router.get("/metrics", response_model=MetricsResponseSchema, summary="Retrieve Real-time System Metrics")
+@api_router.get("/metrics", response_model=MetricsResponseSchema, summary="Retrieve SOC Performance Metrics")
 def get_metrics(
     service: ThreatOperationsService = Depends(get_threat_service),
     current_user: User = Depends(get_current_user)
 ):
-    """Calculates real-time SOC metrics and threat counts."""
+    """Retrieves aggregated operational metrics for SOC dashboard cards."""
     return service.get_metrics()
 
 
-@api_router.get("/dashboard", response_model=DashboardOverviewSchema, summary="Retrieve SOC Dashboard Overview")
+@api_router.get("/dashboard", summary="Retrieve Complete SOC Dashboard Dataset")
 def get_dashboard(
     service: ThreatOperationsService = Depends(get_threat_service),
     current_user: User = Depends(get_current_user)
 ):
-    """Returns complete SOC dashboard telemetry payload."""
+    """Retrieves full telemetry, alerts, honeypots, and remediation status for SOC frontend."""
     return service.get_dashboard_summary()
 
 
 # ==========================================
-# ATTACK SIMULATION API ENDPOINTS
+# THREAT SIMULATION ENDPOINTS
 # ==========================================
 
-@api_router.post("/simulate/cloudtrail", status_code=status.HTTP_201_CREATED, summary="Simulate CloudTrail Log Batch Ingestion")
+@api_router.post("/simulate/cloudtrail", status_code=status.HTTP_201_CREATED, summary="Simulate CloudTrail Telemetry Batch")
 def simulate_cloudtrail(
     payload: CloudTrailBatchPayloadSchema,
     service: ThreatOperationsService = Depends(get_threat_service),
     current_user: User = Depends(get_current_user)
 ):
-    """Processes CloudTrail log batch, normalizes records, and runs ML threat analysis."""
-    dict_payload = payload.model_dump()
-    result = service.process_cloudtrail_batch(dict_payload)
+    """Ingests simulated raw CloudTrail log batch into pipeline."""
+    res = service.process_cloudtrail_batch(payload.dict())
     return {
         "status": "PROCESSED",
-        "ingested_count": result["processed_count"],
-        "high_risk_count": result["high_risk_count"],
-        "events": result["events"]
+        "ingested_count": res.get("processed_count", 0),
+        "processed_count": res.get("processed_count", 0),
+        "high_risk_count": res.get("high_risk_count", 0),
+        "events": res.get("events", [])
     }
 
 
-@api_router.post("/simulate/ssh-attack", summary="Simulate SSH Honeypot Brute Force Attempt")
+@api_router.post("/simulate/ssh-attack", summary="Simulate SSH Honeypot Brute-Force Attack")
 def simulate_ssh_attack(
     payload: SSHSimulationSchema,
     service: ThreatOperationsService = Depends(get_threat_service),
     current_user: User = Depends(get_current_user)
 ):
-    """Simulates an SSH brute-force attack against Cowrie honeypot trap."""
-    telemetry = service.simulate_ssh_attack(payload.source_ip, payload.username, payload.password)
+    """Simulates SSH brute force attack attempt against Cowrie Honeypot."""
+    res = service.simulate_ssh_attack(
+        source_ip=payload.source_ip,
+        username=payload.username,
+        password=payload.password
+    )
     return {
         "status": "CAPTURED",
-        "telemetry": telemetry
+        "telemetry": res
     }
 
 
-@api_router.post("/simulate/http-attack", summary="Simulate HTTP Honeypot Exploit Request")
+@api_router.post("/simulate/http-attack", summary="Simulate Web Exploit Probe")
 def simulate_http_attack(
     payload: HTTPSimulationSchema,
     service: ThreatOperationsService = Depends(get_threat_service),
     current_user: User = Depends(get_current_user)
 ):
-    """Simulates a web application exploit probe against HTTP honeypot trap."""
-    result = service.simulate_http_attack(payload.source_ip, payload.path, payload.method, payload.payload)
+    """Simulates HTTP exploit payload probe against Web Deception Trap."""
+    res = service.simulate_http_attack(
+        source_ip=payload.source_ip,
+        path=payload.path,
+        method=payload.method,
+        payload=payload.payload
+    )
     return {
         "status": "CAPTURED",
-        "result": result
+        "result": res
     }
