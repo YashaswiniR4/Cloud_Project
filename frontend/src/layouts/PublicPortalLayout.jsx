@@ -23,8 +23,8 @@ export const PublicPortalLayout = () => {
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-bold text-white tracking-wide text-base block">ABC CORPORATION</span>
-              <span className="text-[10px] text-slate-400 font-mono tracking-wider block uppercase">Employee Enterprise Gateway</span>
+              <span className="font-bold text-white tracking-wide text-base block">SentinelAI</span>
+              <span className="text-[10px] text-slate-400 font-mono tracking-wider block uppercase">Employee Corporate Portal</span>
             </div>
           </Link>
 
@@ -93,11 +93,11 @@ export const PublicPortalLayout = () => {
               <div className="flex items-center space-x-3 border-l border-slate-800 pl-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-200 border border-slate-700">
-                    {user?.username?.[0]?.toUpperCase() || 'E'}
+                    {user?.username?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <div className="hidden sm:block text-left">
-                    <p className="text-xs font-semibold text-white leading-tight">{user?.username || 'Employee'}</p>
-                    <p className="text-[10px] text-slate-400 leading-tight">{user?.email || 'user@abccorp.com'}</p>
+                    <p className="text-xs font-semibold text-white leading-tight">{user?.username || 'User'}</p>
+                    <p className="text-[10px] text-slate-400 leading-tight">{user?.email || 'user@sentinelai.com'}</p>
                   </div>
                 </div>
                 <button
@@ -137,9 +137,9 @@ export const PublicPortalLayout = () => {
       {/* Corporate Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950/60 py-6 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p>© 2026 ABC Corporation. All Rights Reserved. Confidential Employee Gateway.</p>
+          <p>© 2026 SentinelAI. All Rights Reserved. Confidential Employee Gateway.</p>
           <div className="flex items-center space-x-4">
-            <span className="text-[11px] text-slate-400">Enterprise Operations Platform</span>
+            <span className="text-[11px] text-slate-400">Enterprise Workspace Platform</span>
           </div>
         </div>
       </footer>

@@ -40,7 +40,6 @@ export const Login = () => {
         if (role === 'Security Analyst' || role === 'Admin') {
           navigate('/dashboard');
         } else {
-          // If non-analyst tries logging into SOC port 5174, redirect to portal URL or error
           window.location.href = 'http://localhost:5173/dashboard';
         }
       }
@@ -70,7 +69,7 @@ export const Login = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-white tracking-wide">
-              {isPortal ? 'ABC CORPORATION' : 'AUTONOMOUS CLOUD SOC'}
+              {isPortal ? 'SentinelAI' : 'AUTONOMOUS CLOUD SOC'}
             </h1>
             <p className="text-xs text-slate-400 mt-1">
               {isPortal ? 'Corporate Employee Sign In' : 'Security Operations Center Authentication'}
@@ -103,7 +102,7 @@ export const Login = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={isPortal ? "user@abccorp.com" : "analyst@enterprise.com"}
+                placeholder={isPortal ? "user@sentinelai.com" : "analyst@enterprise.com"}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
                 required
               />
@@ -149,7 +148,7 @@ export const Login = () => {
               </div>
             ) : (
               <>
-                <span>{isPortal ? 'Sign In to Corporate Workspace' : 'Authenticate to SOC Console'}</span>
+                <span>{isPortal ? 'Sign In to Workspace' : 'Authenticate to SOC Console'}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

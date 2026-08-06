@@ -11,6 +11,9 @@ export const PortalDashboard = () => {
   const { user } = useAuth();
   const location = useLocation();
 
+  // Display 'User' or 'Employee' on corporate portal regardless of backend role claim
+  const displayRole = (user?.role === 'Security Analyst' || user?.role === 'Admin') ? 'User' : (user?.role || 'User');
+
   // Tab State: overview, profile, documents, notifications, activity, settings
   const queryParams = new URLSearchParams(location.search);
   const initialTab = queryParams.get('tab') || 'overview';
@@ -27,12 +30,12 @@ export const PortalDashboard = () => {
   const [pwdError, setPwdError] = useState(null);
 
   const [notifications] = useState([
-    { id: 1, title: 'Welcome to ABC Corporation Workspace', desc: 'Your employee profile is active and verified.', time: 'Today 09:00' },
+    { id: 1, title: 'Welcome to SentinelAI Workspace', desc: 'Your employee profile is active and verified.', time: 'Today 09:00' },
     { id: 2, title: 'System Maintenance Scheduled', desc: 'Routine cloud server optimization tonight at 23:00 UTC.', time: 'Yesterday' },
   ]);
 
   const [activities, setActivities] = useState([
-    { id: 1, event: 'Employee Login', ip: '198.51.100.101', location: 'Bengaluru, India', time: 'Just Now', status: 'Success' },
+    { id: 1, event: 'User Login', ip: '198.51.100.101', location: 'Bengaluru, India', time: 'Just Now', status: 'Success' },
     { id: 2, event: 'Document Upload', ip: '198.51.100.101', location: 'Bengaluru, India', time: '1 hour ago', status: 'Completed' },
     { id: 3, event: 'Profile Update', ip: '198.51.100.101', location: 'Bengaluru, India', time: 'Yesterday', status: 'Success' },
   ]);
@@ -180,14 +183,14 @@ export const PortalDashboard = () => {
       <div className="glass-panel p-6 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <div className="w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xl font-bold">
-            {user?.username?.[0]?.toUpperCase() || 'E'}
+            {user?.username?.[0]?.toUpperCase() || 'U'}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white tracking-wide">{user?.username || 'Employee'}</h1>
-            <p className="text-xs text-slate-400 mt-0.5">{user?.email || 'user@abccorp.com'}</p>
+            <h1 className="text-xl font-bold text-white tracking-wide">{user?.username || 'User'}</h1>
+            <p className="text-xs text-slate-400 mt-0.5">{user?.email || 'user@sentinelai.com'}</p>
             <div className="flex items-center space-x-2 mt-2">
               <span className="px-2.5 py-0.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-full uppercase">
-                {user?.role || 'Employee'}
+                {displayRole}
               </span>
               <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold rounded-full uppercase flex items-center space-x-1">
                 <CheckCircle2 className="w-3 h-3" />
@@ -250,20 +253,20 @@ export const PortalDashboard = () => {
         <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4 max-w-xl">
           <h3 className="text-base font-bold text-white flex items-center space-x-2">
             <User className="w-5 h-5 text-blue-400" />
-            <span>Employee Profile Details</span>
+            <span>Profile Details</span>
           </h3>
           <div className="space-y-3 text-xs">
             <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex justify-between">
               <span className="text-slate-400">Username:</span>
-              <span className="text-white font-semibold">{user?.username || 'Employee'}</span>
+              <span className="text-white font-semibold">{user?.username || 'User'}</span>
             </div>
             <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex justify-between">
               <span className="text-slate-400">Email Address:</span>
-              <span className="text-white font-semibold">{user?.email || 'user@abccorp.com'}</span>
+              <span className="text-white font-semibold">{user?.email || 'user@sentinelai.com'}</span>
             </div>
             <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl flex justify-between">
               <span className="text-slate-400">Role:</span>
-              <span className="text-blue-400 font-semibold">{user?.role || 'Employee'}</span>
+              <span className="text-blue-400 font-semibold">{displayRole}</span>
             </div>
           </div>
         </div>
@@ -440,7 +443,7 @@ export const PortalDashboard = () => {
               <Settings className="w-5 h-5 text-blue-400" />
               <span>Change Password</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-1">Update your employee login password.</p>
+            <p className="text-xs text-slate-400 mt-1">Update your login password.</p>
           </div>
 
           {pwdMessage && (
