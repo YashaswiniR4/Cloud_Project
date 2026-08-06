@@ -29,6 +29,14 @@ def send_verification_otp_email(to_email: str, otp_code: str) -> Dict[str, Any]:
     """
     logger.info(f"OTP generated: {otp_code} for recipient: {to_email}")
 
+    # Check if operating in test or development mock mode
+    if os.getenv("TESTING", "false").lower() in ("true", "1") or settings.ENV == "testing":
+        logger.warning(f"⚠️ [DEVELOPMENT/TEST LOG MOCK] Destination: {to_email} | OTP: {otp_code}")
+        return {
+            "success": True,
+            "message": f"[Dev Mode] Verification OTP {otp_code} logged to console."
+        }
+
     smtp_host = settings.SMTP_HOST or os.getenv("SMTP_HOST", "smtp.gmail.com")
     smtp_port = settings.SMTP_PORT or int(os.getenv("SMTP_PORT", "587"))
     smtp_user = settings.SMTP_USER or os.getenv("SMTP_USER", "")
@@ -40,15 +48,6 @@ def send_verification_otp_email(to_email: str, otp_code: str) -> Dict[str, Any]:
     if not smtp_user or not smtp_password:
         err_msg = "SMTP_USER or SMTP_PASSWORD is not configured in .env file."
         logger.error(f"Email sending failed: {err_msg}")
-
-        # If running unit tests or in development without credentials, log OTP to console
-        if settings.ENV in ("testing", "development") or os.getenv("TESTING", "false").lower() in ("true", "1"):
-            logger.warning(f"⚠️ [DEVELOPMENT LOG MOCK] Destination: {to_email} | OTP: {otp_code}")
-            return {
-                "success": True,
-                "message": f"[Dev Mode] Verification OTP {otp_code} logged to console."
-            }
-
         return {
             "success": False,
             "error": err_msg

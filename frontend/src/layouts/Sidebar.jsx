@@ -9,7 +9,10 @@ import {
   Crosshair, 
   Settings, 
   LogOut,
-  Shield
+  Shield,
+  FlaskConical,
+  GitCommit,
+  Building2
 } from 'lucide-react';
 
 export const Sidebar = ({ onOpenSimulation }) => {
@@ -20,6 +23,8 @@ export const Sidebar = ({ onOpenSimulation }) => {
     { name: 'Alerts Feed', path: '/alerts', icon: Bell },
     { name: 'ML Predictions', path: '/ml-predictions', icon: Cpu },
     { name: 'Honeypot Traps', path: '/honeypots', icon: Crosshair },
+    { name: 'Incident Timeline', path: '/incidents', icon: GitCommit },
+    { name: 'Simulation Lab', path: '/simulation-lab', icon: FlaskConical },
     { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
@@ -36,15 +41,18 @@ export const Sidebar = ({ onOpenSimulation }) => {
         </div>
       </div>
 
-      {/* Quick Action Button */}
-      <div className="p-4">
-        <button
-          onClick={onOpenSimulation}
-          className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl font-medium text-xs transition-all duration-200 shadow-lg shadow-red-500/5 group"
+      {/* Target Corporate Portal Switcher */}
+      <div className="p-3 bg-slate-950/60 border-b border-slate-800 px-4">
+        <NavLink
+          to="/portal"
+          className="flex items-center justify-between px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 rounded-xl text-xs text-blue-400 font-medium transition-colors"
         >
-          <ShieldAlert className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
-          <span>Simulate Cyber Attack</span>
-        </button>
+          <div className="flex items-center space-x-2">
+            <Building2 className="w-4 h-4" />
+            <span>Target Employee App</span>
+          </div>
+          <span className="text-[10px] bg-blue-500/20 px-1.5 py-0.5 rounded font-mono">LIVE</span>
+        </NavLink>
       </div>
 
       {/* Navigation Links */}
@@ -56,7 +64,7 @@ export const Sidebar = ({ onOpenSimulation }) => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-medium transition-all duration-200 ${
+                `flex items-center space-x-3 px-4 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
                   isActive
                     ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 shadow-md shadow-blue-500/5'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
@@ -74,11 +82,11 @@ export const Sidebar = ({ onOpenSimulation }) => {
       <div className="p-4 border-t border-slate-800 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs border border-blue-500/30">
-            SO
+            SA
           </div>
           <div>
             <p className="text-xs font-medium text-white">SOC Analyst</p>
-            <p className="text-[10px] text-slate-500">secops@aws.prod</p>
+            <p className="text-[10px] text-slate-500">RBAC Verified</p>
           </div>
         </div>
         <NavLink to="/login" className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg transition-colors">

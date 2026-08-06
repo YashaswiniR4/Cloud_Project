@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM Database Models for SOC Platform
+SQLAlchemy ORM Database Models for SOC Platform & Enterprise Employee Portal
 """
 
 import uuid
@@ -34,7 +34,57 @@ class User(Base):
     locked_until = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=current_utc_time, nullable=False)
 
+    behavior_profile = relationship("UserBehaviorProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    documents = relationship("EmployeeDocument", back_populates="user", cascade="all, delete-orphan")
 
+
+class UserBehaviorProfile(Base):
+    __tablename__ = "user_behavior_profiles"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    usual_country = Column(String(50), default="India", nullable=False)
+    usual_city = Column(String(50), default="Bengaluru", nullable=False)
+    usual_device = Column(String(100), default="Windows Chrome", nullable=False)
+    usual_start_hour = Column(Integer, default=9, nullable=False) # 9 AM
+    usual_end_hour = Column(Integer, default=18, nullable=False)   # 6 PM
+    total_logins = Column(Integer, default=0, nullable=False)
+    anomaly_count = Column(Integer, default=0, nullable=False)
+    last_login_ip = Column(String(45), nullable=True)
+    last_login_country = Column(String(50), nullable=True)
+    last_login_time = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=current_utc_time, nullable=False)
+
+    user = relationship("User", back_populates="behavior_profile")
+
+
+class EmployeeDocument(Base):
+    __tablename__ = "employee_documents"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    filename = Column(String(255), nullable=False)
+    file_size_bytes = Column(Integer, nullable=False)
+    file_hash = Column(String(64), nullable=False)
+    is_malicious = Column(Boolean, default=False, nullable=False)
+    scan_result = Column(String(100), default="CLEAN", nullable=False)
+    uploaded_at = Column(DateTime(timezone=True), default=current_utc_time, nullable=False)
+
+    user = relationship("User", back_populates="documents")
+
+
+class IncidentTimeline(Base):
+    __tablename__ = "incident_timeline"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    incident_id = Column(String(100), unique=True, nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    severity = Column(String(20), default="HIGH", nullable=False)
+    status = Column(String(50), default="OPEN", nullable=False) # OPEN, INVESTIGATING, CLOSED
+    source_ip = Column(String(45), nullable=False, index=True)
+    user_arn = Column(String(255), nullable=True)
+    steps_json = Column(JSON, nullable=False) # List of step dictionaries
+    created_at = Column(DateTime(timezone=True), default=current_utc_time, nullable=False)
 
 
 class Event(Base):

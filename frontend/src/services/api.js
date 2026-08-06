@@ -52,7 +52,6 @@ export const getCurrentUser = async () => {
 };
 
 export const logoutUser = async () => {
-
   try {
     const response = await api.post('/auth/logout');
     return response.data;
@@ -61,7 +60,33 @@ export const logoutUser = async () => {
   }
 };
 
+// --- Corporate Employee Portal APIs ---
+export const logPortalActivity = async (payload) => {
+  const response = await api.post('/portal/activity', payload);
+  return response.data;
+};
 
+export const uploadPortalDocument = async (formData) => {
+  const response = await api.post('/portal/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+// --- Incident Investigation & UBA APIs ---
+export const getIncidents = async () => {
+  const response = await api.get('/incidents');
+  return response.data;
+};
+
+export const getUBAProfiles = async () => {
+  const response = await api.get('/uba/profiles');
+  return response.data;
+};
+
+// --- SOC Operations APIs ---
 export const getHealthStatus = async () => {
   const response = await api.get('/health');
   return response.data;

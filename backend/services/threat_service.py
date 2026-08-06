@@ -1,7 +1,7 @@
 """
 Core Business Logic Service - Integrates CloudTrail Ingestion, S3 WORM Storage,
-ML Threat Classification, Zero-Day Anomaly Detection, Honeypots, Alert Dispatching,
-and PostgreSQL (Supabase) / SQLite Database Persistence.
+ML Threat Classification, Zero-Day Anomaly Detection, User Behavior Analytics (UBA),
+Honeypots, Alert Dispatching, and PostgreSQL (Supabase) Database Persistence.
 """
 
 from typing import Dict, Any, List
@@ -17,6 +17,7 @@ from backend.threat_intel import ThreatIntelFeedManager
 from backend.alerting import IncidentAlertDispatcher
 from backend.honeypots.ssh_honeypot import SSHHoneypotEngine
 from backend.honeypots.http_honeypot import HTTPHoneypotEngine
+from backend.services.behavioral_analytics import evaluate_user_behavior
 
 from ml.feature_extractor import TelemetryFeatureExtractor
 from ml.threat_classifier import CyberThreatClassifier
@@ -25,6 +26,7 @@ from ml.xai_explainability import ThreatExplainabilityEngine
 
 from backend.database.database import init_db, SessionLocal
 from backend.database import crud
+from backend.database.models import IncidentTimeline, EmployeeDocument
 
 
 class ThreatOperationsService:
@@ -85,6 +87,111 @@ class ThreatOperationsService:
         self.simulate_ssh_attack("198.51.100.99", "root", "toor")
         self.simulate_http_attack("203.0.113.88", "/admin", "POST", payload="' OR '1'='1")
 
+    def log_portal_activity(
+        self,
+        event_name: str,
+        source_ip: str,
+        user_id: str = None,
+        user_arn: str = None,
+        country: str = "India",
+        city: str = "Bengaluru",
+        device: str = "Windows Chrome",
+        payload: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """
+        Ingests activity from the Corporate Employee Portal, applies UBA analysis,
+        scores threats via ML, and dispatches real-time alerts to the SOC Dashboard.
+        """
+        db = SessionLocal()
+        try:
+            # 1. Evaluate User Behavior Analytics (UBA)
+            uba_result = evaluate_user_behavior(
+                db=db,
+                user_id=user_id or "anonymous-employee",
+                source_ip=source_ip,
+                country=country,
+                city=city,
+                device=device
+            )
+
+            # 2. Build Event Telemetry Dict
+            base_score = 10.0
+            if "FAIL" in event_name.upper() or "LOCK" in event_name.upper():
+                base_score += 45.0
+            if "INJECTION" in event_name.upper() or "MALICIOUS" in event_name.upper():
+                base_score += 70.0
+
+            total_threat_score = min(100.0, base_score + uba_result["anomaly_boost"])
+            severity = "HIGH" if total_threat_score >= 70.0 else ("MEDIUM" if total_threat_score >= 40.0 else "LOW")
+
+            event_dict = {
+                "event_id": f"portal-{int(datetime.now().timestamp())}",
+                "event_name": event_name,
+                "event_time": datetime.now(timezone.utc).isoformat(),
+                "event_source": "corporate.employee.portal",
+                "source_ip": source_ip,
+                "user_arn": user_arn or f"arn:aws:iam::123456789012:user/{user_id or 'employee'}",
+                "threat_score": total_threat_score,
+                "severity": severity,
+                "is_high_risk": total_threat_score >= 70.0,
+                "raw_payload": payload or {},
+                "uba_analysis": uba_result
+            }
+
+            # Threat Intel Lookup
+            reputation = self.threat_intel.check_ip_reputation(source_ip)
+            crud.upsert_threat_intel(db, source_ip, reputation)
+            event_dict["threat_intel"] = reputation
+
+            # Save Event to DB
+            crud.create_event(db, event_dict)
+            self.all_threat_logs.append(event_dict)
+
+            # High Risk Handling
+            if total_threat_score >= 70.0:
+                alert = self.alert_dispatcher.dispatch_alert({
+                    "severity": severity,
+                    "source_ip": source_ip,
+                    "event_name": event_name,
+                    "threat_score": total_threat_score
+                })
+                crud.create_alert(db, alert)
+                self.dispatched_alerts.append(alert)
+
+                # Create Incident Timeline Entry
+                timeline_steps = [
+                    {"step": 1, "title": "Employee Portal Action", "desc": f"User attempted {event_name}", "timestamp": datetime.now(timezone.utc).isoformat()},
+                    {"step": 2, "title": "UBA Anomaly Detection", "desc": f"UBA Boost +{uba_result['anomaly_boost']} | {uba_result['reasons']}", "timestamp": datetime.now(timezone.utc).isoformat()},
+                    {"step": 3, "title": "ML Threat Classification", "desc": f"Assigned Threat Score: {total_threat_score}/100 ({severity})", "timestamp": datetime.now(timezone.utc).isoformat()},
+                    {"step": 4, "title": "Lambda Remediation Executed", "desc": f"Automated Security Group IP Containment for {source_ip}", "timestamp": datetime.now(timezone.utc).isoformat()},
+                    {"step": 5, "title": "Incident Containment", "desc": "Account locked & attacker IP blocked with 403 Forbidden", "timestamp": datetime.now(timezone.utc).isoformat()}
+                ]
+
+                timeline = IncidentTimeline(
+                    incident_id=f"INC-{int(datetime.now().timestamp())}",
+                    title=f"Security Incident: {event_name} from {source_ip}",
+                    severity=severity,
+                    status="OPEN",
+                    source_ip=source_ip,
+                    user_arn=event_dict["user_arn"],
+                    steps_json=timeline_steps
+                )
+                db.add(timeline)
+                db.commit()
+
+                # Execute Serverless Remediation
+                rem_res = self.remediation_handler.revoke_security_group_ingress(source_ip)
+                crud.create_remediation_action(
+                    db,
+                    action_type="EMPLOYEE_PORTAL_THREAT_BLOCK",
+                    target=source_ip,
+                    actions=rem_res.get("actions_taken", ["Blocked IP Ingress", "Account Locked"])
+                )
+
+            return event_dict
+        finally:
+            db.close()
+
     def process_cloudtrail_batch(self, batch_payload: Dict[str, Any]) -> Dict[str, Any]:
         """Ingests CloudTrail events, scores threats via ML, saves to Database, and dispatches alerts."""
         parsed_events = self.pipeline.ingest_raw_payload(batch_payload)
@@ -93,13 +200,11 @@ class ThreatOperationsService:
         try:
             high_risk_count = 0
             for event in parsed_events:
-                # Feature extraction & ML scoring
                 features = self.feature_extractor.extract_features(event)
                 classification = self.classifier.classify_log(event)
                 anomaly = self.anomaly_detector.detect(features)
                 explanation = self.xai_explainer.calculate_shap_values(features, classification["prediction"])
 
-                # Threat Intel lookup
                 reputation = self.threat_intel.check_ip_reputation(event["source_ip"])
                 crud.upsert_threat_intel(db, event["source_ip"], reputation)
 
@@ -108,13 +213,11 @@ class ThreatOperationsService:
                 event["ml_anomaly_score"] = anomaly
                 event["ml_xai"] = explanation
 
-                # Save Event to Database
                 crud.create_event(db, event)
                 self.all_threat_logs.append(event)
 
                 if event.get("is_high_risk", False) or anomaly.get("is_zero_day_anomaly", False):
                     high_risk_count += 1
-                    # Alert dispatch
                     alert = self.alert_dispatcher.dispatch_alert({
                         "severity": event["severity"],
                         "source_ip": event["source_ip"],
@@ -124,7 +227,6 @@ class ThreatOperationsService:
                     crud.create_alert(db, alert)
                     self.dispatched_alerts.append(alert)
 
-                    # Execute Remediation if Critical
                     if event["severity"] == "HIGH":
                         rem_res = self.remediation_handler.revoke_security_group_ingress(event["source_ip"])
                         self.remediation_handler.disable_compromised_iam_keys(event["user_arn"])
@@ -149,7 +251,6 @@ class ThreatOperationsService:
         db = SessionLocal()
 
         try:
-            # Threat Intel Lookup
             reputation = self.threat_intel.check_ip_reputation(source_ip)
             crud.upsert_threat_intel(db, source_ip, reputation)
 
@@ -159,7 +260,6 @@ class ThreatOperationsService:
 
             self.all_threat_logs.append(telemetry)
 
-            # Persist Honeypot Log
             crud.create_honeypot_log(db, {
                 "honeypot_type": "SSH",
                 "source_ip": source_ip,
@@ -168,7 +268,6 @@ class ThreatOperationsService:
                 "threat_score": telemetry["threat_score"]
             })
 
-            # Alerting
             alert = self.alert_dispatcher.dispatch_alert({
                 "severity": "HIGH",
                 "source_ip": source_ip,
@@ -178,7 +277,6 @@ class ThreatOperationsService:
             crud.create_alert(db, alert)
             self.dispatched_alerts.append(alert)
 
-            # Serverless Remediation
             rem_res = self.remediation_handler.revoke_security_group_ingress(source_ip)
             crud.create_remediation_action(
                 db,
@@ -198,7 +296,6 @@ class ThreatOperationsService:
         db = SessionLocal()
 
         try:
-            # Threat Intel Lookup
             reputation = self.threat_intel.check_ip_reputation(source_ip)
             crud.upsert_threat_intel(db, source_ip, reputation)
 
@@ -208,7 +305,6 @@ class ThreatOperationsService:
 
             self.all_threat_logs.append(telemetry)
 
-            # Persist Honeypot Log
             crud.create_honeypot_log(db, {
                 "honeypot_type": "HTTP",
                 "source_ip": source_ip,

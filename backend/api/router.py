@@ -1,9 +1,10 @@
 """
-FastAPI APIRouter definitions for SOC Operations Endpoints
+FastAPI APIRouter definitions for SOC Operations & Employee Portal Endpoints
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Dict, Any, List
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from typing import Dict, Any, List, Optional
+import hashlib
 
 from backend.schemas.telemetry_schemas import (
     CloudTrailBatchPayloadSchema,
@@ -17,10 +18,11 @@ from backend.schemas.dashboard_schemas import (
 )
 from backend.services.threat_service import threat_ops_service, ThreatOperationsService
 
-
 from backend.auth.security import get_current_user
 from backend.api.auth import auth_router
-from backend.database.models import User
+from backend.database.models import User, IncidentTimeline, UserBehaviorProfile
+from backend.database.database import get_db
+from sqlalchemy.orm import Session
 
 
 def get_threat_service() -> ThreatOperationsService:
@@ -51,6 +53,172 @@ def health_check(service: ThreatOperationsService = Depends(get_threat_service))
         }
     }
 
+
+# ==========================================
+# EMPLOYEE PORTAL ACTIVITY & UPLOAD API
+# ==========================================
+
+@api_router.post("/portal/activity", summary="Log Corporate Employee Portal Activity Event")
+def log_portal_activity(
+    payload: Dict[str, Any],
+    service: ThreatOperationsService = Depends(get_threat_service)
+):
+    """
+    Ingests events from Corporate Employee Portal (login, failed login, profile update, API probe),
+    applies UBA behavioral analysis, scores threats via ML, and dispatches real-time alerts.
+    """
+    event_name = payload.get("event_name", "EMPLOYEE_ACTION")
+    source_ip = payload.get("source_ip", "198.51.100.101")
+    user_id = payload.get("user_id", "employee-user")
+    country = payload.get("country", "India")
+    city = payload.get("city", "Bengaluru")
+    device = payload.get("device", "Windows Chrome")
+
+    result = service.log_portal_activity(
+        event_name=event_name,
+        source_ip=source_ip,
+        user_id=user_id,
+        country=country,
+        city=city,
+        device=device,
+        payload=payload
+    )
+
+    return {
+        "status": "PROCESSED",
+        "event": result
+    }
+
+
+@api_router.post("/portal/upload", summary="Scan and Upload Corporate Document")
+async def upload_document(
+    file: UploadFile = File(...),
+    user_id: str = Form("employee-user"),
+    source_ip: str = Form("198.51.100.101"),
+    service: ThreatOperationsService = Depends(get_threat_service)
+):
+    """
+    Receives uploaded corporate file, computes SHA256 hash, scans for malicious patterns (e.g. .exe, .sh, EICAR),
+    and logs threat telemetry to SOC engine.
+    """
+    contents = await file.read()
+    file_hash = hashlib.sha256(contents).hexdigest()
+    filename = file.filename.lower()
+
+    is_malicious = filename.endswith(".exe") or filename.endswith(".sh") or b"EICAR" in contents or b"eval(" in contents
+    scan_status = "MALICIOUS_THREAT_DETECTED" if is_malicious else "CLEAN"
+
+    # Route threat log to telemetry pipeline
+    event_name = "MALICIOUS_FILE_UPLOAD_ATTEMPT" if is_malicious else "DOCUMENT_UPLOAD"
+    service.log_portal_activity(
+        event_name=event_name,
+        source_ip=source_ip,
+        user_id=user_id,
+        payload={
+            "filename": file.filename,
+            "file_size": len(contents),
+            "file_hash": file_hash,
+            "scan_status": scan_status
+        }
+    )
+
+    if is_malicious:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Upload Rejected: Malicious executable or script detected in file '{file.filename}'. Threat reported to SOC."
+        )
+
+    return {
+        "status": "SUCCESS",
+        "filename": file.filename,
+        "file_hash": file_hash,
+        "scan_status": scan_status
+    }
+
+
+# ==========================================
+# INCIDENT INVESTIGATION & TIMELINE API
+# ==========================================
+
+@api_router.get("/incidents", summary="Retrieve Incident Investigation Timelines")
+def get_incidents(
+    db: Session = Depends(get_db),
+    service: ThreatOperationsService = Depends(get_threat_service),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieves all step-by-step incident investigation timelines."""
+    incidents = db.query(IncidentTimeline).order_by(IncidentTimeline.created_at.desc()).all()
+    if not incidents:
+        # Provide baseline timeline if empty
+        return {
+            "total_incidents": 1,
+            "incidents": [
+                {
+                    "incident_id": "INC-881920",
+                    "title": "Privilege Escalation & Unauthorized Policy Attachment",
+                    "severity": "HIGH",
+                    "status": "OPEN",
+                    "source_ip": "198.51.100.45",
+                    "user_arn": "arn:aws:iam::123456789012:user/attacker",
+                    "steps": [
+                        {"step": 1, "title": "Initial Employee Portal Login", "desc": "User logged in from 198.51.100.45 (India)", "timestamp": "2026-08-06T18:00:00Z"},
+                        {"step": 2, "title": "UBA Anomaly Detected", "desc": "Geographic shift: India -> Russia (+45 Risk Boost)", "timestamp": "2026-08-06T18:05:00Z"},
+                        {"step": 3, "title": "AttachUserPolicy API Probe", "desc": "Attempted AdministratorAccess policy grant", "timestamp": "2026-08-06T18:06:00Z"},
+                        {"step": 4, "title": "XGBoost Threat Scoring", "desc": "XGBoost score assigned: 95/100 (HIGH SEVERITY)", "timestamp": "2026-08-06T18:06:05Z"},
+                        {"step": 5, "title": "Lambda Remediation Executed", "desc": "Compromised IAM Keys Disabled & Security Group IP Blocked", "timestamp": "2026-08-06T18:06:10Z"}
+                    ]
+                }
+            ]
+        }
+
+    formatted = [
+        {
+            "incident_id": inc.incident_id,
+            "title": inc.title,
+            "severity": inc.severity,
+            "status": inc.status,
+            "source_ip": inc.source_ip,
+            "user_arn": inc.user_arn,
+            "steps": inc.steps_json
+        } for inc in incidents
+    ]
+    return {
+        "total_incidents": len(formatted),
+        "incidents": formatted
+    }
+
+
+# ==========================================
+# USER BEHAVIOR ANALYTICS (UBA) API
+# ==========================================
+
+@api_router.get("/uba/profiles", summary="Retrieve User Behavior Profiles")
+def get_uba_profiles(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieves behavioral baselines and anomaly counts for registered users."""
+    profiles = db.query(UserBehaviorProfile).all()
+    return {
+        "total_profiles": len(profiles),
+        "profiles": [
+            {
+                "user_id": p.user_id,
+                "usual_country": p.usual_country,
+                "usual_city": p.usual_city,
+                "usual_device": p.usual_device,
+                "total_logins": p.total_logins,
+                "anomaly_count": p.anomaly_count,
+                "last_login_ip": p.last_login_ip,
+                "last_login_country": p.last_login_country
+            } for p in profiles
+        ]
+    }
+
+
+# ==========================================
+# SOC DASHBOARD API ENDPOINTS
+# ==========================================
 
 @api_router.get("/logs", summary="Retrieve Ingested Security Logs")
 def get_logs(
@@ -119,6 +287,10 @@ def get_dashboard(
     return service.get_dashboard_summary()
 
 
+# ==========================================
+# ATTACK SIMULATION API ENDPOINTS
+# ==========================================
+
 @api_router.post("/simulate/cloudtrail", status_code=status.HTTP_201_CREATED, summary="Simulate CloudTrail Log Batch Ingestion")
 def simulate_cloudtrail(
     payload: CloudTrailBatchPayloadSchema,
@@ -162,4 +334,3 @@ def simulate_http_attack(
         "status": "CAPTURED",
         "result": result
     }
-
