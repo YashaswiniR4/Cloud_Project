@@ -29,34 +29,45 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Default Root Redirect to Employee Portal */}
-          <Route path="/" element={<Navigate to="/portal" replace />} />
-
           {/* Public Authentication Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
 
-          {/* Corporate Employee Portal Routes (Independent Interface) */}
+          {/* Corporate Employee Portal Routes */}
           <Route path="/portal" element={<PublicPortalLayout />}>
             <Route index element={<PortalLanding />} />
             <Route path="dashboard" element={<PortalDashboard />} />
           </Route>
 
-          {/* Restricted SOC Command Center Routes (Security Analyst & Admin Roles ONLY) */}
+          {/* Restricted SOC Command Center Routes (Security Analyst & Admin Roles) */}
           <Route element={<ProtectedRoute allowedRoles={['Security Analyst', 'Admin']} />}>
-            <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="logs" element={<CloudTrailLogs />} />
-              <Route path="threats" element={<ThreatIntel />} />
-              <Route path="alerts" element={<Alerts />} />
-              <Route path="ml-predictions" element={<MLPredictions />} />
-              <Route path="honeypots" element={<Honeypots />} />
-              <Route path="incidents" element={<IncidentInvestigation />} />
-              <Route path="simulation-lab" element={<SimulationLab />} />
-              <Route path="settings" element={<Settings />} />
+            <Route element={<DashboardLayout />}>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/logs" element={<CloudTrailLogs />} />
+              <Route path="/threats" element={<ThreatIntel />} />
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/ml-predictions" element={<MLPredictions />} />
+              <Route path="/honeypots" element={<Honeypots />} />
+              <Route path="/incidents" element={<IncidentInvestigation />} />
+              <Route path="/simulation-lab" element={<SimulationLab />} />
+              <Route path="/settings" element={<Settings />} />
+
+              {/* Support sub-path aliases */}
+              <Route path="/dashboard/logs" element={<CloudTrailLogs />} />
+              <Route path="/dashboard/threats" element={<ThreatIntel />} />
+              <Route path="/dashboard/alerts" element={<Alerts />} />
+              <Route path="/dashboard/ml-predictions" element={<MLPredictions />} />
+              <Route path="/dashboard/honeypots" element={<Honeypots />} />
+              <Route path="/dashboard/incidents" element={<IncidentInvestigation />} />
+              <Route path="/dashboard/simulation-lab" element={<SimulationLab />} />
+              <Route path="/dashboard/settings" element={<Settings />} />
             </Route>
           </Route>
+
+          {/* Fallback Catch-All Route */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
