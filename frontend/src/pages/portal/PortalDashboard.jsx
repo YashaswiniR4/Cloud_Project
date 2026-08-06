@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   User, Mail, Key, UploadCloud, FileText, CheckCircle2, 
-  AlertCircle, Loader2, Clock, MapPin, Laptop, Bell, Settings, Lock, Zap, ShieldAlert, FileCheck, RefreshCw
+  AlertCircle, Loader2, Clock, MapPin, Laptop, Bell, Settings, Lock, Zap, ShieldAlert, FileCheck, RefreshCw, AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { logPortalActivity, uploadPortalDocument, getPortalDocuments, getPortalActivityHistory } from '../../services/api';
@@ -32,9 +32,9 @@ export const PortalDashboard = () => {
   const [pwdMessage, setPwdMessage] = useState(null);
   const [pwdError, setPwdError] = useState(null);
 
-  const [notifications] = useState([
-    { id: 1, title: 'Welcome to SentinelAI Workspace', desc: 'Your employee profile is active and verified.', time: 'Today 09:00' },
-    { id: 2, title: 'System Maintenance Scheduled', desc: 'Routine cloud server optimization tonight at 23:00 UTC.', time: 'Yesterday' },
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'Welcome to SentinelAI Workspace', desc: 'Your employee profile is active and verified.', time: 'Today 09:00', type: 'info' },
+    { id: 2, title: 'System Maintenance Scheduled', desc: 'Routine cloud server optimization tonight at 23:00 UTC.', time: 'Yesterday', type: 'info' },
   ]);
 
   const [activities, setActivities] = useState([
@@ -93,6 +93,19 @@ export const PortalDashboard = () => {
     }).catch(() => {});
   }, [user]);
 
+  const pushSecurityWarningNotification = (filename = 'suspicious_file') => {
+    setNotifications(prev => [
+      {
+        id: Date.now(),
+        title: '🚨 SECURITY WARNING: Malicious Payload Rejected',
+        desc: `Unauthorized file upload attempt detected ('${filename}'). Do not upload suspicious scripts, malware, or executable files; otherwise your account and workstation IP address will be permanently blocked by Security Operations.`,
+        time: 'Just Now',
+        type: 'warning'
+      },
+      ...prev
+    ]);
+  };
+
   const handleFileUpload = async (e) => {
     e.preventDefault();
     if (!file) return;
@@ -117,6 +130,7 @@ export const PortalDashboard = () => {
       console.error('Upload error:', err);
       const detail = err.response?.data?.detail || 'Document upload request failed.';
       setUploadError(detail);
+      pushSecurityWarningNotification(file?.name || 'uploaded file');
       
       if (detail.includes('Malicious') || detail.includes('Threat') || detail.includes('Rejected')) {
         setIsBlocked(true);
@@ -140,6 +154,8 @@ export const PortalDashboard = () => {
     formData.append('user_email', user?.email || 'sourabh@sentinelai.com');
     formData.append('source_ip', '198.51.100.222');
 
+    pushSecurityWarningNotification('malicious_webshell.sh');
+
     try {
       await uploadPortalDocument(formData);
     } catch (err) {
@@ -152,6 +168,17 @@ export const PortalDashboard = () => {
   };
 
   const handleSimulateUBAAttack = async () => {
+    setNotifications(prev => [
+      {
+        id: Date.now(),
+        title: '⚠️ SECURITY WARNING: Anomaloous Geographic Login Shift',
+        desc: `Unverified login session detected from Moscow, Russia (198.51.100.222). Do not attempt unapproved remote proxy logins; otherwise account access will be terminated.`,
+        time: 'Just Now',
+        type: 'warning'
+      },
+      ...prev
+    ]);
+
     try {
       await logPortalActivity({
         event_name: 'ANOMALOUS_GEOGRAPHIC_SHIFT_LOGIN',
@@ -204,9 +231,23 @@ export const PortalDashboard = () => {
         <div className="pt-2 text-[11px] font-mono text-red-400/80 bg-red-950/40 p-3 rounded-xl border border-red-900/40">
           Incident ID: INC-{Math.floor(Math.random() * 899999 + 100000)} | Status: CONTAINED BY SOC
         </div>
+        <div className="pt-3 flex justify-center space-x-3">
+          <button
+            onClick={() => {
+              setIsBlocked(false);
+              setActiveTab('notifications');
+            }}
+            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition-colors flex items-center space-x-2"
+          >
+            <Bell className="w-4 h-4 text-amber-300" />
+            <span>View Security Warning Notifications</span>
+          </button>
+        </div>
       </div>
     );
   }
+
+  const warningCount = notifications.filter(n => n.type === 'warning').length;
 
   return (
     <div className="space-y-6 font-sans">
@@ -237,11 +278,16 @@ export const PortalDashboard = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-lg font-medium capitalize transition-colors ${
+              className={`px-3 py-1.5 rounded-lg font-medium capitalize transition-colors relative flex items-center space-x-1.5 ${
                 activeTab === tab ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
               }`}
             >
-              {tab}
+              <span>{tab}</span>
+              {tab === 'notifications' && warningCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
+                  {warningCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -467,16 +513,32 @@ export const PortalDashboard = () => {
         <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4 max-w-xl">
           <h3 className="text-base font-bold text-white flex items-center space-x-2">
             <Bell className="w-5 h-5 text-blue-400" />
-            <span>Employee Notifications</span>
+            <span>Employee Notifications & Security Alerts</span>
           </h3>
           <div className="space-y-3">
             {notifications.map((n) => (
-              <div key={n.id} className="p-4 bg-slate-950 border border-slate-800 rounded-xl space-y-1">
+              <div 
+                key={n.id} 
+                className={`p-4 rounded-xl border space-y-1.5 transition-all ${
+                  n.type === 'warning' 
+                    ? 'bg-red-950/40 border-red-800/60 shadow-lg shadow-red-950/30' 
+                    : 'bg-slate-950 border-slate-800'
+                }`}
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-white">{n.title}</span>
+                  <span className={`text-xs font-bold flex items-center space-x-1.5 ${
+                    n.type === 'warning' ? 'text-red-400 font-extrabold' : 'text-white'
+                  }`}>
+                    {n.type === 'warning' && <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 animate-pulse" />}
+                    <span>{n.title}</span>
+                  </span>
                   <span className="text-[10px] text-slate-500">{n.time}</span>
                 </div>
-                <p className="text-xs text-slate-400">{n.desc}</p>
+                <p className={`text-xs leading-relaxed ${
+                  n.type === 'warning' ? 'text-red-200/90 font-medium' : 'text-slate-400'
+                }`}>
+                  {n.desc}
+                </p>
               </div>
             ))}
           </div>
