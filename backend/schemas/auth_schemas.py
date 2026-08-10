@@ -48,3 +48,14 @@ class ResendOTPSchema(BaseModel):
     email: str = Field(..., description="Target user email address")
 
 
+class ForgotPasswordSchema(BaseModel):
+    email: str = Field(..., description="Registered user email address")
+
+
+class ResetPasswordSchema(BaseModel):
+    email: str = Field(..., description="Registered user email address")
+    otp: str = Field(..., min_length=6, max_length=6, description="6-digit reset OTP code")
+    new_password: str = Field(..., description="New password satisfying complexity policy")
+    confirm_password: str = Field(..., description="Confirm new password")
+
+

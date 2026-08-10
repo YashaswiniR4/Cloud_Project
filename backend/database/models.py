@@ -36,6 +36,7 @@ class User(Base):
 
     behavior_profile = relationship("UserBehaviorProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     documents = relationship("EmployeeDocument", back_populates="user", cascade="all, delete-orphan")
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
 
 
 class UserBehaviorProfile(Base):
@@ -188,6 +189,19 @@ class AuditLog(Base):
     is_locked = Column(Boolean, default=True, nullable=False)
     timestamp = Column(DateTime(timezone=True), default=current_utc_time, nullable=False)
     created_at = Column(DateTime(timezone=True), default=current_utc_time, nullable=False)
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = Column(String(255), nullable=False, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    used = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=current_utc_time, nullable=False)
+
+    user = relationship("User", back_populates="password_reset_tokens")
 
 
 # Indexing

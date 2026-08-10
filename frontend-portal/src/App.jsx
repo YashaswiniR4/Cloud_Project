@@ -7,6 +7,8 @@ import { PublicPortalLayout } from './layouts/PublicPortalLayout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { VerifyEmail } from './pages/VerifyEmail';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 
 import { PortalLanding } from './pages/portal/PortalLanding';
 import { PortalDashboard } from './pages/portal/PortalDashboard';
@@ -20,6 +22,8 @@ export const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Corporate Employee Portal Main Layout */}
           <Route path="/" element={<PublicPortalLayout />}>

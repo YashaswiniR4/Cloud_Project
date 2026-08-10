@@ -2,10 +2,11 @@
 CRUD Database Operations for SOC Operations
 """
 
+import hashlib
 from typing import List, Dict, Any, Optional
 from sqlalchemy.orm import Session
 from backend.database.models import (
-    User, Event, Alert, ThreatIntelligence, HoneypotLog, MLPrediction, RemediationAction, AuditLog
+    User, Event, Alert, ThreatIntelligence, HoneypotLog, MLPrediction, RemediationAction, AuditLog, PasswordResetToken
 )
 
 
@@ -300,6 +301,68 @@ def create_audit_log(db: Session, log_id: str, bucket: str, sha256_hash: str) ->
 
 def get_all_audit_logs(db: Session) -> List[AuditLog]:
     return db.query(AuditLog).order_by(AuditLog.created_at.desc()).all()
+
+
+# --- Password Reset Tokens ---
+def hash_token(raw_otp: str) -> str:
+    return hashlib.sha256(raw_otp.strip().encode('utf-8')).hexdigest()
+
+
+def create_password_reset_token(db: Session, user_id: str, raw_otp: str, expires_in_minutes: int = 10) -> PasswordResetToken:
+    # Invalidate older unused reset tokens for this user
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.user_id == user_id,
+        PasswordResetToken.used == False
+    ).update({"used": True}, synchronize_session=False)
+
+    token_hash_val = hash_token(raw_otp)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=expires_in_minutes)
+
+    reset_token = PasswordResetToken(
+        user_id=user_id,
+        token_hash=token_hash_val,
+        expires_at=expires_at,
+        used=False
+    )
+    db.add(reset_token)
+    db.commit()
+    db.refresh(reset_token)
+    return reset_token
+
+
+def get_valid_password_reset_token(db: Session, user_id: str, raw_otp: str) -> Optional[PasswordResetToken]:
+    token_hash_val = hash_token(raw_otp)
+    token_obj = db.query(PasswordResetToken).filter(
+        PasswordResetToken.user_id == user_id,
+        PasswordResetToken.token_hash == token_hash_val,
+        PasswordResetToken.used == False
+    ).first()
+
+    if not token_obj:
+        return None
+
+    now_utc = datetime.now(timezone.utc)
+    expires_at_tz = token_obj.expires_at
+    if expires_at_tz and expires_at_tz.tzinfo is None:
+        expires_at_tz = expires_at_tz.replace(tzinfo=timezone.utc)
+
+    if expires_at_tz < now_utc:
+        return None
+
+    return token_obj
+
+
+def mark_password_reset_token_used(db: Session, token_obj: PasswordResetToken):
+    token_obj.used = True
+    db.commit()
+
+
+def update_user_password(db: Session, user: User, new_password_hash: str):
+    user.password_hash = new_password_hash
+    user.failed_login_attempts = 0
+    user.locked_until = None
+    db.commit()
+    db.refresh(user)
 
 
 def uuid_gen():

@@ -134,6 +134,9 @@ export const Login = () => {
               />
               <span className="text-xs text-slate-400">Remember Me</span>
             </label>
+            <Link to="/forgot-password" className="text-xs text-blue-400 hover:text-blue-300 font-medium hover:underline">
+              Forgot Password?
+            </Link>
           </div>
 
           <button

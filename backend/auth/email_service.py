@@ -110,3 +110,74 @@ def send_verification_otp_email(to_email: str, otp_code: str) -> Dict[str, Any]:
         err_msg = f"Unexpected SMTP error: {str(e)}"
         logger.error(f"Email sending failed: {err_msg}", exc_info=True)
         return {"success": False, "error": err_msg}
+
+
+def send_password_reset_email(to_email: str, otp_code: str) -> Dict[str, Any]:
+    """
+    Dispatches 6-digit password reset OTP code to target email address via SMTP.
+    """
+    logger.info(f"Password reset request received for recipient: {to_email}")
+
+    # Check if operating in test or development mock mode
+    if os.getenv("TESTING", "false").lower() in ("true", "1") or settings.ENV == "testing":
+        logger.warning(f"⚠️ [DEVELOPMENT/TEST LOG MOCK] Destination: {to_email} | Password Reset OTP: {otp_code}")
+        return {
+            "success": True,
+            "message": f"[Dev Mode] Password reset OTP logged to console."
+        }
+
+    smtp_host = settings.SMTP_HOST or os.getenv("SMTP_HOST", "smtp.gmail.com")
+    smtp_port = settings.SMTP_PORT or int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = settings.SMTP_USER or os.getenv("SMTP_USER", "")
+    smtp_password = settings.SMTP_PASSWORD or os.getenv("SMTP_PASSWORD", "")
+    smtp_from = settings.SMTP_FROM_EMAIL or os.getenv("SMTP_FROM_EMAIL", smtp_user or "noreply@cloudsoc.io")
+    smtp_use_ssl = settings.SMTP_USE_SSL or (smtp_port == 465)
+
+    if not smtp_user or not smtp_password:
+        err_msg = "SMTP_USER or SMTP_PASSWORD is not configured in .env file."
+        logger.error(f"Password reset email failed: {err_msg}")
+        return {"success": False, "error": err_msg}
+
+    try:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "Cloud SOC - Password Reset 6-Digit Verification Code"
+        msg["From"] = smtp_from
+        msg["To"] = to_email
+
+        text_content = f"Your Cloud SOC Password Reset Code is: {otp_code}\n\nThis code will expire in 10 minutes. If you did not request a password reset, please ignore this email."
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #0b0f19; color: #ffffff;">
+            <h2 style="color: #ef4444;">Autonomous Cloud SOC Security Operations</h2>
+            <p>A password reset was requested for your account ({to_email}). Please use the following 6-digit code to reset your password:</p>
+            <div style="background-color: #1e293b; padding: 15px; border-radius: 8px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #3b82f6; margin: 20px 0;">
+                {otp_code}
+            </div>
+            <p style="font-size: 12px; color: #94a3b8;">This code will expire in 10 minutes. If you did not request this, please contact your security administrator.</p>
+        </div>
+        """
+
+        msg.attach(MIMEText(text_content, "plain"))
+        msg.attach(MIMEText(html_content, "html"))
+
+        if smtp_use_ssl or smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=15)
+        else:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+
+        with server:
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+
+        logger.info(f"Password reset email sent successfully to {to_email}")
+        return {
+            "success": True,
+            "message": f"Password reset OTP delivered to {to_email}"
+        }
+
+    except Exception as e:
+        err_msg = f"Failed to deliver password reset email: {str(e)}"
+        logger.error(err_msg, exc_info=True)
+        return {"success": False, "error": err_msg}
