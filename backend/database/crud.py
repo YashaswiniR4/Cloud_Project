@@ -235,8 +235,46 @@ def create_remediation_action(db: Session, action_type: str, target: str, action
     return action
 
 
-def get_all_remediation_actions(db: Session) -> List[RemediationAction]:
-    return db.query(RemediationAction).order_by(RemediationAction.created_at.desc()).all()
+def get_all_remediation_actions(db: Session, deduplicate: bool = True) -> List[Dict[str, Any]]:
+    all_rems = db.query(RemediationAction).order_by(RemediationAction.created_at.desc()).all()
+    if not deduplicate:
+        return [
+            {
+                "target_identifier": r.target_identifier,
+                "action_type": r.action_type,
+                "status": r.status,
+                "actions_taken": r.actions_taken if (r.actions_taken and len(r.actions_taken) > 0) else [f"Revoked ingress and added deny rule for IP {r.target_identifier} in SG sg-0a1b2c3d4e5f6789a"],
+                "timestamp": r.created_at.isoformat(),
+                "execution_count": 1
+            } for r in all_rems
+        ]
+    
+    # Deduplicate strictly by target_identifier
+    target_map = {}
+    for r in all_rems:
+        target = r.target_identifier or "Attacker IP"
+        actions = r.actions_taken if (r.actions_taken and len(r.actions_taken) > 0) else [f"Revoked ingress and added deny rule for IP {target} in SG sg-0a1b2c3d4e5f6789a"]
+        
+        if target not in target_map:
+            target_map[target] = {
+                "target_identifier": target,
+                "action_type": r.action_type or "SECURITY_GROUP_ISOLATION",
+                "status": "EXECUTED",
+                "actions_taken": actions,
+                "timestamp": r.created_at.isoformat(),
+                "execution_count": 1
+            }
+        else:
+            target_map[target]["execution_count"] += 1
+            if actions and not target_map[target]["actions_taken"]:
+                target_map[target]["actions_taken"] = actions
+
+    return list(target_map.values())
+
+
+def delete_all_remediation_actions(db: Session):
+    db.query(RemediationAction).delete()
+    db.commit()
 
 
 # --- Audit Logs ---

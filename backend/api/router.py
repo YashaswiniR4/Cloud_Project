@@ -352,6 +352,16 @@ def get_remediations(
     }
 
 
+@api_router.delete("/remediations/clear", summary="Clear Remediation History")
+def clear_remediations(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Clears historical remediation log entries from database."""
+    crud.delete_all_remediation_actions(db)
+    return {"status": "SUCCESS", "message": "All historical remediation logs cleared."}
+
+
 @api_router.get("/threats", summary="Retrieve Threat Intelligence Feed Data")
 def get_threats(
     db: Session = Depends(get_db),

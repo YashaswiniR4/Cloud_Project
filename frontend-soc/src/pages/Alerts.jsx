@@ -147,8 +147,13 @@ export const Alerts = () => {
                       <span className="text-xs font-bold text-red-400 flex items-center space-x-1">
                         <Lock className="w-3.5 h-3.5" />
                         <span>CONTAINMENT EXECUTED</span>
+                        {rem.execution_count > 1 && (
+                          <span className="px-2 py-0.5 bg-red-950 text-red-300 border border-red-800/60 rounded-full text-[9px] font-mono">
+                            {rem.execution_count}x
+                          </span>
+                        )}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-500">Target: {rem.target_identifier || 'Attacker IP'}</span>
+                      <span className="text-[10px] font-mono text-blue-400 font-semibold">Target: {rem.target_identifier || 'Attacker IP'}</span>
                     </div>
                     <div className="space-y-1">
                       {rem.actions_taken?.map((action, aIdx) => (

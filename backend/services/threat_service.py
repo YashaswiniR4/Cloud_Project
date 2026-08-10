@@ -391,23 +391,14 @@ class ThreatOperationsService:
         """Returns complete SOC dashboard payload from database."""
         db = SessionLocal()
         try:
-            remediations = crud.get_all_remediation_actions(db)
-            rem_list = [
-                {
-                    "target_identifier": r.target_identifier,
-                    "action_type": r.action_type,
-                    "status": r.status,
-                    "actions_taken": r.actions_taken,
-                    "timestamp": r.timestamp.isoformat()
-                } for r in remediations
-            ]
+            rem_list = crud.get_all_remediation_actions(db, deduplicate=True)
 
             return {
                 "system_status": "HEALTHY",
                 "metrics": self.get_metrics(),
                 "recent_threats": self.all_threat_logs[-10:],
                 "recent_alerts": self.dispatched_alerts[-10:],
-                "remediation_actions": rem_list if rem_list else self.remediation_handler.remediation_log[-10:],
+                "remediation_actions": rem_list,
                 "honeypot_summary": {
                     "ssh_honeypot_active": self.ssh_honeypot.is_active,
                     "ssh_logs_count": len(crud.get_honeypot_logs(db, "SSH")),

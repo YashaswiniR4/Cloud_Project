@@ -131,6 +131,11 @@ export const getRemediations = async () => {
   return response.data;
 };
 
+export const clearRemediations = async () => {
+  const response = await api.delete('/remediations/clear');
+  return response.data;
+};
+
 export const getThreats = async () => {
   const response = await api.get('/threats');
   return response.data;
