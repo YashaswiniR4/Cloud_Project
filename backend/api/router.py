@@ -329,13 +329,42 @@ def get_logs(
 
 @api_router.get("/alerts", summary="Retrieve Dispatched Security Alerts")
 def get_alerts(
+    db: Session = Depends(get_db),
     service: ThreatOperationsService = Depends(get_threat_service),
     current_user: User = Depends(get_current_user)
 ):
-    """Retrieves all dispatched SNS/SOC alert notifications."""
+    """Retrieves all dispatched SNS/SOC alert notifications from database and memory."""
+    db_alerts = crud.get_all_alerts(db)
+    alert_list = []
+    seen_ids = set()
+    
+    for a in db_alerts:
+        seen_ids.add(a.alert_id)
+        raw_uid = a.user_id or "Attacker_User"
+        alert_list.append({
+            "alert_id": a.alert_id,
+            "event_name": a.event_name,
+            "severity": a.severity,
+            "source_ip": a.source_ip,
+            "user_id": raw_uid,
+            "user_email": a.user_email or f"{raw_uid.lower()}@sentinelai.com",
+            "user_arn": a.user_arn or f"arn:aws:iam::123456789012:user/{raw_uid}",
+            "threat_score": a.threat_score,
+            "sns_topic_arn": a.sns_topic_arn,
+            "message": a.message,
+            "status": a.status,
+            "timestamp": a.timestamp.isoformat() if a.timestamp else a.created_at.isoformat()
+        })
+        
+    for mem_a in reversed(service.dispatched_alerts):
+        aid = mem_a.get("alert_id")
+        if aid and aid not in seen_ids:
+            seen_ids.add(aid)
+            alert_list.insert(0, mem_a)
+
     return {
-        "total_alerts": len(service.dispatched_alerts),
-        "alerts": service.dispatched_alerts
+        "total_alerts": len(alert_list),
+        "alerts": alert_list
     }
 
 

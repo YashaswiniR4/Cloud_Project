@@ -67,11 +67,7 @@ export const Alerts = () => {
             <div className="space-y-3">
               {alerts.length > 0 ? (
                 alerts.map((alert, idx) => {
-                  const rawName = alert.user_id || alert.user_arn?.split('/').pop();
-                  const usernameDisplay = (rawName && rawName !== 'employee-user' && rawName !== 'anonymous-employee' && rawName !== 'anonymous')
-                    ? rawName
-                    : 'Attacker_User';
-
+                  const usernameDisplay = alert.user_id || alert.user_arn?.split('/').pop() || 'Attacker_User';
                   const userEmailDisplay = alert.user_email || `${usernameDisplay.toLowerCase()}@sentinelai.com`;
 
                   return (
