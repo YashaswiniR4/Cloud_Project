@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
 import { AttackSimulationModal } from '../components/AttackSimulationModal';
 import { getHealthStatus, getAlerts } from '../services/api';
-import { ShieldAlert, Bell, X, Lock, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, X, Lock } from 'lucide-react';
 
 export const DashboardLayout = () => {
   const [isSimModalOpen, setIsSimModalOpen] = useState(false);
@@ -14,25 +14,33 @@ export const DashboardLayout = () => {
 
   const prevAlertsCountRef = useRef(0);
 
-  // Synthesize soft security audio alert sound
+  // Synthesize 3-beep security audio alert sound notification
   const playAlertChime = () => {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
+      
+      const playBeep = (delay) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
-      osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + delay); // A5 note
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + delay + 0.2);
 
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.2);
 
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
 
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.3);
+        osc.start(audioCtx.currentTime + delay);
+        osc.stop(audioCtx.currentTime + delay + 0.2);
+      };
+
+      // Play 3 consecutive alert sound beeps
+      playBeep(0.0);
+      playBeep(0.3);
+      playBeep(0.6);
     } catch (e) {
       // AudioContext fallback
     }
@@ -55,7 +63,7 @@ export const DashboardLayout = () => {
         setActiveNotification(latestAlert);
         playAlertChime();
 
-        // Auto hide notification after 6 seconds
+        // Auto hide notification banner after 6 seconds
         setTimeout(() => {
           setActiveNotification(null);
         }, 6000);
@@ -118,7 +126,7 @@ export const DashboardLayout = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar onRefresh={fetchHealthAndAlerts} healthStatus={healthStatus} alertCount={alertCount} />
         <main className="flex-1 p-6 overflow-y-auto">
-          <Outlet context={{ refreshHealth: fetchHealthAndAlerts }} />
+          <Outlet context={{ refreshHealth: fetchHealthAndAlerts, playChime: playAlertChime }} />
         </main>
       </div>
 

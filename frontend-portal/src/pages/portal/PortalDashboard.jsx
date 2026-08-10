@@ -93,7 +93,36 @@ export const PortalDashboard = () => {
     }).catch(() => {});
   }, [user]);
 
+  const playPortalWarningSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const playBeep = (delay) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime + delay);
+        osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + delay + 0.2);
+
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.2);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(audioCtx.currentTime + delay);
+        osc.stop(audioCtx.currentTime + delay + 0.2);
+      };
+
+      // Play 3 consecutive alert sound beeps
+      playBeep(0.0);
+      playBeep(0.3);
+      playBeep(0.6);
+    } catch (e) {}
+  };
+
   const pushSecurityWarningNotification = (filename = 'suspicious_file') => {
+    playPortalWarningSound();
     setNotifications(prev => [
       {
         id: Date.now(),
