@@ -123,7 +123,7 @@ class ThreatOperationsService:
             base_score = 10.0
             if "FAIL" in event_name.upper() or "LOCK" in event_name.upper():
                 base_score += 45.0
-            if "INJECTION" in event_name.upper() or "MALICIOUS" in event_name.upper() or "WEBSHELL" in event_name.upper() or "RCE" in event_name.upper() or "EXECUTABLE" in event_name.upper() or "XSS" in event_name.upper():
+            if "INJECTION" in event_name.upper() or "MALICIOUS" in event_name.upper() or "WEBSHELL" in event_name.upper() or "RCE" in event_name.upper() or "EXECUTABLE" in event_name.upper() or "XSS" in event_name.upper() or "RESET" in event_name.upper() or "PASSWORD" in event_name.upper():
                 base_score += 75.0
 
             total_threat_score = min(100.0, base_score + uba_result["anomaly_boost"])

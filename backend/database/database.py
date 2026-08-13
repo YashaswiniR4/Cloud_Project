@@ -21,7 +21,9 @@ try:
     engine = create_engine(
         db_url,
         connect_args=connect_args,
-        pool_pre_ping=True
+        pool_pre_ping=True,
+        pool_recycle=300,
+        pool_timeout=30
     )
     # Test connection
     with engine.connect() as conn:
@@ -57,6 +59,9 @@ def init_db():
             conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE NOT NULL;"))
             conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_otp VARCHAR(6);"))
             conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expires_at TIMESTAMP WITH TIME ZONE;"))
+            conn.execute(text("ALTER TABLE alerts ADD COLUMN IF NOT EXISTS user_id VARCHAR(36);"))
+            conn.execute(text("ALTER TABLE alerts ADD COLUMN IF NOT EXISTS user_email VARCHAR(100);"))
+            conn.execute(text("ALTER TABLE alerts ADD COLUMN IF NOT EXISTS user_arn VARCHAR(255);"))
             conn.commit()
     except Exception as err:
         logger.debug(f"Schema column check: {err}")

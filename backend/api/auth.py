@@ -2,12 +2,14 @@
 FastAPI Authentication Endpoints (/auth/register, /auth/login, /auth/me, /auth/logout, /auth/verify-email, /auth/resend-otp)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from backend.database.database import get_db
 from backend.database import crud
 from backend.database.models import User
+from backend.services.threat_service import threat_ops_service
+from config.logging_config import logger
 from datetime import datetime, timedelta, timezone
 
 from backend.schemas.auth_schemas import (
@@ -273,11 +275,12 @@ def check_reset_rate_limit(key: str, max_requests: int = 3, window_seconds: int 
 
 
 @auth_router.post("/forgot-password", summary="Request Password Reset OTP Code")
-def forgot_password(payload: ForgotPasswordSchema, db: Session = Depends(get_db)):
+def forgot_password(payload: ForgotPasswordSchema, request: Request, db: Session = Depends(get_db)):
     """
     Initiates password reset flow.
     Generates a 6-digit OTP code (expires in 10 minutes), stores SHA-256 hash in database,
     and sends code via email. Returns generic response to prevent account enumeration.
+    Dispatches a security alert to the SOC Analyst Command Center.
     """
     try:
         clean_email = validate_email_address(payload.email)
@@ -292,14 +295,27 @@ def forgot_password(payload: ForgotPasswordSchema, db: Session = Depends(get_db)
         crud.create_password_reset_token(db, user.id, otp_code, expires_in_minutes=10)
         send_password_reset_email(user.email, otp_code)
 
+        try:
+            client_ip = request.client.host if (request and request.client) else "127.0.0.1"
+            threat_ops_service.log_portal_activity(
+                event_name="PASSWORD_RESET_REQUESTED",
+                source_ip=client_ip,
+                user_id=user.username,
+                user_email=user.email,
+                payload={"email": user.email, "action": "Forgot Password OTP Generation", "status": "PENDING"}
+            )
+        except Exception as e:
+            logger.warning(f"Failed to dispatch SOC alert for password reset request: {e}")
+
     return {"message": "If an account associated with this email exists, a password reset code has been sent."}
 
 
 @auth_router.post("/reset-password", summary="Reset Password with OTP Code")
-def reset_password(payload: ResetPasswordSchema, db: Session = Depends(get_db)):
+def reset_password(payload: ResetPasswordSchema, request: Request, db: Session = Depends(get_db)):
     """
     Resets user password using valid, unexpired, single-use 6-digit OTP code.
     Enforces password complexity policy and updates hashed password in database.
+    Dispatches a security alert to the SOC Analyst Command Center.
     """
     clean_email = payload.email.strip().lower()
     
@@ -328,5 +344,17 @@ def reset_password(payload: ResetPasswordSchema, db: Session = Depends(get_db)):
     hashed_pwd = hash_password(clean_new_pwd)
     crud.update_user_password(db, user, hashed_pwd)
     crud.mark_password_reset_token_used(db, token_obj)
+
+    try:
+        client_ip = request.client.host if (request and request.client) else "127.0.0.1"
+        threat_ops_service.log_portal_activity(
+            event_name="PASSWORD_RESET_COMPLETED",
+            source_ip=client_ip,
+            user_id=user.username,
+            user_email=user.email,
+            payload={"email": user.email, "action": "Password Reset Execution", "status": "SUCCESSFUL"}
+        )
+    except Exception as e:
+        logger.warning(f"Failed to dispatch SOC alert for password reset completion: {e}")
 
     return {"message": "Password reset successfully. Please log in with your new password."}
