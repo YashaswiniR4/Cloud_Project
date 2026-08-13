@@ -136,6 +136,11 @@ export const getAlerts = async () => {
   return response.data;
 };
 
+export const clearAlerts = async () => {
+  const response = await api.delete('/alerts/clear');
+  return response.data;
+};
+
 export const getRemediations = async () => {
   const response = await api.get('/remediations');
   return response.data;

@@ -368,6 +368,17 @@ def get_alerts(
     }
 
 
+@api_router.delete("/alerts/clear", summary="Clear All Dispatched Security Alerts")
+def clear_alerts(
+    db: Session = Depends(get_db),
+    service: ThreatOperationsService = Depends(get_threat_service)
+):
+    """Clears all dispatched security alert cards from database and in-memory engine."""
+    crud.delete_all_alerts(db)
+    service.dispatched_alerts.clear()
+    return {"status": "SUCCESS", "message": "All historical security alerts cleared."}
+
+
 @api_router.get("/remediations", summary="Retrieve Automated Lambda Remediation Logs")
 def get_remediations(
     service: ThreatOperationsService = Depends(get_threat_service),

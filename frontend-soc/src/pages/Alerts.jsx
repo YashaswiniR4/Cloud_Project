@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, ShieldAlert, CheckCircle, RefreshCw, Zap, Shield, Lock, User, Globe, Mail } from 'lucide-react';
-import { getAlerts, getRemediations } from '../services/api';
+import { Bell, ShieldAlert, CheckCircle, RefreshCw, Zap, Shield, Lock, User, Globe, Mail, Trash2 } from 'lucide-react';
+import { getAlerts, getRemediations, clearAlerts } from '../services/api';
 import { SeverityBadge } from '../components/SeverityBadge';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 
@@ -8,6 +8,7 @@ export const Alerts = () => {
   const [alerts, setAlerts] = useState([]);
   const [remediations, setRemediations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
 
   const fetchAlertsData = async () => {
     try {
@@ -22,6 +23,18 @@ export const Alerts = () => {
       console.error('Failed to fetch alerts/remediations:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearAlerts = async () => {
+    try {
+      setClearing(true);
+      await clearAlerts();
+      setAlerts([]);
+    } catch (err) {
+      console.error("Error clearing alerts:", err);
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -42,13 +55,23 @@ export const Alerts = () => {
             Real-time alert notifications displaying attacker IP addresses, targeted employee identities, and automated Lambda remediations.
           </p>
         </div>
-        <button
-          onClick={fetchAlertsData}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs transition-colors"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Refresh Alerts</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleClearAlerts}
+            disabled={clearing || alerts.length === 0}
+            className="flex items-center space-x-2 px-3 py-2 bg-red-900/40 hover:bg-red-800/60 border border-red-700/50 text-red-300 disabled:opacity-40 font-medium rounded-xl text-xs transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{clearing ? "Clearing..." : "Clear All Alerts"}</span>
+          </button>
+          <button
+            onClick={fetchAlertsData}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs transition-colors"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Refresh Alerts</span>
+          </button>
+        </div>
       </div>
 
       {loading ? (

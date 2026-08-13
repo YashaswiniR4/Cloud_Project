@@ -171,8 +171,13 @@ def create_alert(db: Session, alert_data: Dict[str, Any]) -> Alert:
     return db_alert
 
 
-def get_all_alerts(db: Session, limit: int = 100) -> List[Alert]:
+def get_all_alerts(db: Session, limit: int = 5000) -> List[Alert]:
     return db.query(Alert).order_by(Alert.created_at.desc()).limit(limit).all()
+
+
+def delete_all_alerts(db: Session):
+    db.query(Alert).delete()
+    db.commit()
 
 
 # --- Threat Intelligence ---
